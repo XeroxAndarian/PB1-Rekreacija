@@ -11,3 +11,4 @@ Podatki podo razdeljeni v štiri (4) tabele:
 4. Tabela **Sezona** bo hranila podatke o začetkih in koncih sezon. Vsako šolsko leto je namreč razdeljeno na dve sezoni (okvirno september - januar in februar - junij). Atributi te tabele *id* (id sezone), *začetek*, *konec*. Tabeli 3 in 4 sta povezani preko datuma. In sicer povezavi tipa *1:n*. Vsaka tekma pripada natanko eni sezoni, ena sezona pa ima vsaj 1 tekmo.
 
 
+![image](https://github.com/user-attachments/assets/d6c4addf-0f63-4d3d-85fa-cbcb5b30d510)
