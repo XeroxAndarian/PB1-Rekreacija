@@ -1,4 +1,5 @@
-1. Naložiti podatek
-2. Generiranje baze iz podatkov
+1. Naložiti podatke (Končano) 
+2. Generiranje baze iz podatkov (Nepopolno)
+    2.1 Končano vse razen turnirjev, ki se jih v trenutni sistem tekem, ne da lepo razpakirati. Treba je dodati posebno tabelo turnir.
 3. Tekstovni vmesnik
 4. Spletni vmesnik
