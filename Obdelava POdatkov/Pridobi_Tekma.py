@@ -150,7 +150,7 @@ def pretvori(file):
                 i+=1
 
         if ekipa_a == []:
-            print(datum)
+            # print('Dummy tekma', datum)
             return None
 
         goli_skupaj_a = 0
