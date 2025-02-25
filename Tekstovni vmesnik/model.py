@@ -1,4 +1,6 @@
 import sqlite3
+import math
+import scipy
 
 conn = sqlite3.connect("rekreacija.sqlite")
 
@@ -10,7 +12,7 @@ class Igralec:
         self.priimek = priimek
         self.zmage = zmage
         self.porazi = porazi
-        self.prisotost = prisotnost
+        self.prisotnost = prisotnost
         self.goli = goli
         self.asistence = asistence
         self.avtogoli = avtogoli
@@ -20,29 +22,39 @@ class Igralec:
     
     def __str__(self):
         return f"""Igralec:
---------------
+-----------------------------
 ID: {self.id}
 Ime: {self.ime}
 Priimek: {self.priimek}
-Prisotnost: {self.prisotost}
+Prisotnost: {self.prisotnost}
 Zmage: {self.zmage}
 Porazi: {self.porazi}
 Goli: {self.goli}
 Asistence: {self.asistence}
 Avtogoli: {self.avtogoli}
+-----------------------------
 """
     
     @staticmethod
-    def pridobi_statistiko(id):
+    def pridobi_statistiko(id, zacetek='2000-01-01', konec = '2099-01-01'):
         '''Metoda pridobi statistiko igralca z idejem id in vrne objekt oblike Igralec.'''
         
         # Prisotnost
-        poizvedba = """SELECT COUNT(*) FROM prisotnost WHERE igralec_id = ? """
-        prisotnost = conn.execute(poizvedba, [id]).fetchone()[0]
+        poizvedba = """SELECT COUNT(*) 
+                    FROM prisotnost
+                    JOIN tekma ON (tekma.id = prisotnost.tekma_id)
+                    WHERE igralec_id = ? AND 
+                    datum >= ? AND
+                    datum <= ?"""
+        prisotnost = conn.execute(poizvedba, [id, zacetek, konec]).fetchone()[0]
 
         # goli, asistence, avtogoli
-        poizvedba = """SELECT SUM(goli), SUM(asistence), SUM(avto_goli) FROM prisotnost WHERE igralec_id = ?"""
-        statistika = conn.execute(poizvedba, [id]).fetchone()
+        poizvedba = """SELECT SUM(goli), SUM(asistence), SUM(avto_goli) 
+                    FROM prisotnost 
+                    JOIN tekma ON (tekma.id = prisotnost.tekma_id) 
+                    WHERE igralec_id = ? AND datum >= ? AND
+                    datum <= ?"""
+        statistika = conn.execute(poizvedba, [id, zacetek, konec]).fetchone()
         goli = statistika[0]
         asistence = statistika[1]
         avtogoli = statistika[2]
@@ -54,8 +66,11 @@ Avtogoli: {self.avtogoli}
                     WHERE prisotnost.igralec_id = ? AND 
                         ((tekma.goli_a > tekma.goli_b AND prisotnost.ekipa = 0) 
                             OR 
-                        (tekma.goli_a < tekma.goli_b AND prisotnost.ekipa = 1))"""
-        zmage = conn.execute(poizvedba, [id]).fetchone()[0]
+                        (tekma.goli_a < tekma.goli_b AND prisotnost.ekipa = 1))
+                        AND
+                        datum >= ? AND
+                        datum <= ?"""
+        zmage = conn.execute(poizvedba, [id, zacetek, konec]).fetchone()[0]
 
         # porazi
         poizvedba = """SELECT COUNT(tekma.id)
@@ -64,15 +79,19 @@ Avtogoli: {self.avtogoli}
                     WHERE prisotnost.igralec_id = ? AND 
                         ((tekma.goli_a < tekma.goli_b AND prisotnost.ekipa = 0) 
                             OR 
-                        (tekma.goli_a > tekma.goli_b AND prisotnost.ekipa = 1))"""
-        porazi = conn.execute(poizvedba, [id]).fetchone()[0]
+                        (tekma.goli_a > tekma.goli_b AND prisotnost.ekipa = 1))
+                        AND 
+                        datum >= ? AND
+                        datum <= ?"""
+        porazi = conn.execute(poizvedba, [id, zacetek, konec]).fetchone()[0]
 
         # ime in priimek
         poizvedba = """SELECT vzdevek FROM vzdevek WHERE igralec_id = ?"""
-        ime = conn.execute(poizvedba, [id]).fetchall()[0][0]
         try: 
+            ime = conn.execute(poizvedba, [id]).fetchall()[0][0]
             priimek = conn.execute(poizvedba, [id]).fetchall()[1][0]
         except Exception as e:
+            ime = ''
             priimek = ''
 
         return Igralec(id, ime, priimek, prisotnost, zmage, porazi,  goli, asistence, avtogoli)
@@ -90,7 +109,7 @@ Avtogoli: {self.avtogoli}
     
     @staticmethod
     def vsi_igralci():
-        '''Metoda vrne slobar vseh igralcev v obliki razreda Igralec.'''
+        '''Metoda vrne slovar vseh igralcev v obliki razreda Igralec.'''
         poizvedba = """SELECT id FROM igralec"""
         slovar = {}
         for igralec_id in conn.execute(poizvedba):
@@ -117,14 +136,14 @@ Tekma
 ---------------
 ID: {self.id}
 Datum: {self.datum}
-Rezultat A:B  = {self.goli_ekipa_0}:{self.goli_ekipa_1}
+Rezultat A:B = {self.goli_ekipa_0}:{self.goli_ekipa_1}
 Ekipa A: {self.ekipa_0}
 Ekipa B: {self.ekipa_1}
 """
     
     @staticmethod
     def najdi_tekmo(datum):
-        '''Metoda najde vrne tekmo v obliki objekta Tekma, ki se je dogajala na vnešeni datum.'''
+        '''Metoda najde in vrne tekmo v obliki objekta Tekma, ki se je dogajala na vnešeni datum.'''
 
         # id,  goli A, goli B
         poizvedba = """SELECT id, goli_a, goli_b
@@ -156,19 +175,90 @@ Ekipa B: {self.ekipa_1}
         return Tekma(id_tekme, datum, goli_A, goli_B, ekipi[0], ekipi[1])
         
     
+class Sezona:
+
+    def __init__(self, sezona, zacetek, konec):
+        self.id = sezona
+        self.zacetek = zacetek
+        self.konec = konec
+
+    def __repr__(self):
+        return f"Sezona {self.id} [{self.zacetek} - {self.konec}]"
+    
+    def __str__(self):
+        return f"Sezona {self.id} [{self.zacetek} - {self.konec}]"
+
+    @staticmethod
+    def sezona_zacetek(sezona):
+        '''Metoda vrne zacetek sezone.'''
+        poizvedba = """SELECT zacetek
+                    FROM sezona
+                    WHERE sezona = ?"""
+        rezultat = conn.execute(poizvedba, [sezona]).fetchall()
+        return rezultat[0][0]
+        
+
+    def sezona_konec(sezona):
+        '''Metoda vrne koenc sezone.'''
+        poizvedba = """SELECT konec
+                    FROM sezona
+                    WHERE sezona = ?"""
+        rezultat = conn.execute(poizvedba, [sezona]).fetchall()
+        return rezultat[0][0]
+
+    @staticmethod
+    def vse_sezone():
+        '''Metoda vrne slovar objektov vseh sezon.'''
+        sezone = {}
+        poizvedba = """SELECT id
+                    FROM sezona"""
+        rezultat = conn.execute(poizvedba).fetchall()
+        # print(rezultat)
+        for i in rezultat:
+            zacetek = Sezona.sezona_zacetek(i[0])
+            konec = Sezona.sezona_konec(i[0])
+            sezone[i[0]] = Sezona(i[0], zacetek, konec)
+        return sezone
 
 
 
+def MMR_kalkulator(WR, G, A, AG):
+    '''Izračuna MMR po formuli.'''
+    f = float(6* WR + 2 * G + A - AG)/6
+    sd   = 1.5
+    mean = 0
+    Itg = scipy.integrate.quad(lambda x: 1 / ( sd * ( 2 * math.pi ) ** 0.5 ) * 5 / 2 * math.exp( -x ** 2 / (sd ** 2) ), 0, f)
+    MMR = 250 * Itg[0] + 1000
+    return MMR
+
+def winrate_kalkulator(igralec):
+    '''Izračuna winrate W(zmage)/A(prisotnost).'''
+    return igralec.zmage/igralec.prisotnost
 
 
-A = Igralec.pridobi_statistiko(9)
+def MMR(igralec):
+    '''Prejme igralca in zanj izračuna njegov MMR (match-making-rating).'''
+    winrate = winrate_kalkulator(igralec)
+    goli = igralec.goli
+    asistence = igralec.asistence
+    avtogoli = igralec.avtogoli
+    return MMR_kalkulator(winrate, goli, asistence, avtogoli)
 
-print(Igralec.najdi_igralca('Andraž'))
-print(Igralec.najdi_igralca('Blaž'))
 
-# print(A)
 
-a = Igralec.vsi_igralci()
-
-b = Tekma.najdi_tekmo('2022-09-01')
-c = Tekma.najdi_tekmo('2019-09-01')
+# A = Igralec.pridobi_statistiko(9)
+# B = Igralec.pridobi_statistiko(9, '2024-01-01')
+# 
+# print(Igralec.najdi_igralca('Andraž'))
+# print(Igralec.najdi_igralca('Blaž'))
+# 
+# # print(A)
+# 
+# a = Igralec.vsi_igralci()
+# 
+# b = Tekma.najdi_tekmo('2022-09-01')
+# c = Tekma.najdi_tekmo('2019-09-01')
+# 
+# print(b)
+# 
+# x = Sezona.vse_sezone()
