@@ -5,10 +5,12 @@ import datetime
 danes = datetime.datetime.today().strftime('%Y-%m-%d')
 
 def napaka(f):
+    '''Kadarkoli pritisnemo napačno izbiro želimo izpisati stalno sporočilo in vrniti meni f.'''
     print("Vpisali ste neveljavno izbiro. Prosim, da izberete eno izmed navedenih možnosti.")
     return f()
 
 def meni_casovno_obdobje():
+    '''Funkcija od od uporabnika pridobi informacije o začetku in koncu obdobja, ki ga zanima za igralca in vrne podatke o igralcu iz tega obdobja.'''
     print("=" * 50)
     print("Od kdaj do kdaj te zanima statistika igralca?:")
     print("0 - Celotna statistika")
@@ -112,6 +114,7 @@ def osnovni_meni():
         napaka(osnovni_meni)
 
 def izpis_igralca():
+    '''Funkcija sprejme ID igralca in v primeru, da igralec obstaja, vrne podatke o igralcu v danem obdobju. Tekom izvajanja poklice funkcijo meni_casovno_obdobje.'''
     print("=" * 50)
     print("Vpiši ID igralca, za katerega te zanima statistika:")
     igralec_id = input("ID igralca: --> ")
@@ -128,6 +131,7 @@ def izpis_igralca():
     
     
 def igralec_meni():
+    '''Funkcija, ki nas vodi skozi meni, ki je namenjen za navigacijo po iskanuju igralcev.'''
 
     print("=" * 50,
         "Izberi način iskanja:",
@@ -171,4 +175,5 @@ def igralec_meni():
 
 
 # zaženi
+print("Pozdravljeni v brskalniku statistike rekreacijskega nogometa! Sledite vmesniku, ki vas bo vodil do vaše željene statistike.")
 osnovni_meni()
