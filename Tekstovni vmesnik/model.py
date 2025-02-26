@@ -118,7 +118,7 @@ Avtogoli: {self.avtogoli}
 
 class Tekma:
 
-    def __init__(self, id, datum, goli_ekipa_0, goli_ekipa_1, ekipa_0, ekipa_1):
+    def __init__(self, id, datum="", goli_ekipa_0=0, goli_ekipa_1=0, ekipa_0=[], ekipa_1=[]):
         self.id = id
         self.datum = datum
         self.goli_ekipa_0 = goli_ekipa_0
@@ -155,7 +155,7 @@ Ekipa B: {self.ekipa_1}
             id_tekme = conn.execute(poizvedba, [datum]).fetchall()[0][0]
         except Exception as e:
             print('Na vnešeni datum se ni odvijala nobena tekma.')
-            return None
+            return Tekma(0)
 
         goli_A = rezultat[0][1]
         goli_B = rezultat[0][2]
@@ -173,6 +173,36 @@ Ekipa B: {self.ekipa_1}
         
 
         return Tekma(id_tekme, datum, goli_A, goli_B, ekipi[0], ekipi[1])
+    
+    @staticmethod
+    def najdi_tekmo_id(id):
+        '''Metoda najde in vrne tekmo v obliki objekta Tekma, ki ima ID id.'''
+
+        # id,  goli A, goli B
+        poizvedba = """SELECT id, goli_a, goli_b, datum
+                    FROM tekma
+                    WHERE id = ? """
+        rezultat = conn.execute(poizvedba, [id]).fetchall()
+        
+        if rezultat == []:
+            return Tekma(id)
+
+        goli_A = rezultat[0][1]
+        goli_B = rezultat[0][2]
+        datum = rezultat[0][3]
+        # ekipi
+        ekipi = {0:[], 1:[]}
+        for ekipa_id in [0, 1]:
+            poizvedba = """SELECT prisotnost.igralec_id
+                        FROM tekma
+                        JOIN prisotnost ON (prisotnost.tekma_id = tekma.id)
+                        WHERE tekma.id = ? AND prisotnost.ekipa = ?"""
+            rezultat = conn.execute(poizvedba, [id, ekipa_id]).fetchall()
+            for igralec in rezultat:
+                ekipi[ekipa_id].append(Igralec.pridobi_statistiko(igralec[0]))
+        
+
+        return Tekma(id, datum, goli_A, goli_B, ekipi[0], ekipi[1])
         
     
 class Sezona:
@@ -244,7 +274,120 @@ def MMR(igralec):
     avtogoli = igralec.avtogoli
     return MMR_kalkulator(winrate, goli, asistence, avtogoli)
 
+class Lestvica:
 
+    def __init__(self, kategorija="", stevilo=0, vsebina=[]):
+        self.kategorija = kategorija
+        self.stevilo = stevilo
+        self.vsebina = vsebina
+
+    def __repr__(self):
+        if self.stevilo == 0:
+            return f"Lestvica najboljših v kategoriji: {self.kategorija}."
+        else:
+            return f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija}."
+
+    def __str__(self):
+        if self.stevilo == 0:
+            uvod = f"Lestvica najboljših v kategoriji: {self.kategorija}.\n"
+        else:
+            uvod = f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija}.\n"      
+
+        premor = "-" * 50 + "\n"
+        jedro = ""
+        i = 1
+        for igralec in self.vsebina:
+            ime = f"{i}. {igralec.ime} {igralec.priimek} "
+            if self.kategorija == 'Prisotnost':
+                statistika = f"{str(igralec.prisotnost)}"
+            if self.kategorija == 'Zmage':
+                statistika = f"{str(igralec.zmage)}"
+            if self.kategorija == 'Porazi':
+                statistika = f"{str(igralec.porazi)}"    
+            if self.kategorija == 'Goli':
+                statistika = f"{str(igralec.goli)}"
+            if self.kategorija == 'Asistence':
+                statistika = f"{str(igralec.asistence)}"
+            if self.kategorija == 'Avtogoli':
+                statistika = f"{str(igralec.avtogoli)}"
+            praznina = " " * (30 - len(ime)) + "|" + " " * (5 - len(statistika))
+            vrstica = ime + praznina + statistika + "\n"
+            jedro += vrstica
+            i+=1
+        return uvod + premor + jedro + premor
+                               
+
+
+    @staticmethod
+    def pridobi_goli(stevilo=0):
+        '''Metoda vrne lestvice velikosti stevilo za kategorijo.'''
+        vsebina = []
+        if stevilo == 0:
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(goli)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(goli) DESC"""
+            rezultat = conn.execute(poizvedba).fetchall()
+        else: 
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(goli)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(goli) DESC
+                    LIMIT ?"""
+            rezultat = conn.execute(poizvedba, [stevilo]).fetchall()
+        for i in rezultat:
+            vsebina.append(Igralec.pridobi_statistiko(i[0]))
+        return Lestvica("Goli", stevilo, vsebina)
+
+    @staticmethod
+    def pridobi_asistence(stevilo=0):
+        '''Metoda vrne lestvice velikosti stevilo za kategorijo.'''
+        vsebina = []
+        if stevilo == 0:
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(asistence)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(asistence) DESC"""
+            rezultat = conn.execute(poizvedba).fetchall()
+        else: 
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(asistence)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(asistence) DESC
+                    LIMIT ?"""
+            rezultat = conn.execute(poizvedba, [stevilo]).fetchall()
+        for i in rezultat:
+            vsebina.append(Igralec.pridobi_statistiko(i[0]))
+        return Lestvica("Asistence", stevilo, vsebina)
+    
+
+    @staticmethod
+    def pridobi_avto_goli(stevilo=0):
+        '''Metoda vrne lestvice velikosti stevilo za kategorijo.'''
+        vsebina = []
+        if stevilo == 0:
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(avto_goli)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(avto_goli) DESC"""
+            rezultat = conn.execute(poizvedba).fetchall()
+        else: 
+            poizvedba = """SELECT igralec_id, igralec.ime, igralec.priimek, SUM(avto_goli)
+                    FROM igralec
+                    JOIN prisotnost ON (igralec.id = prisotnost.igralec_id)
+                    GROUP BY igralec.id
+                    ORDER BY SUM(avto_goli) DESC
+                    LIMIT ?"""
+            rezultat = conn.execute(poizvedba, [stevilo]).fetchall()
+        for i in rezultat:
+            vsebina.append(Igralec.pridobi_statistiko(i[0]))
+        return Lestvica("Avtogoli", stevilo, vsebina)
+    
 
 # A = Igralec.pridobi_statistiko(9)
 # B = Igralec.pridobi_statistiko(9, '2024-01-01')
@@ -262,3 +405,12 @@ def MMR(igralec):
 # print(b)
 # 
 # x = Sezona.vse_sezone()
+
+a = Lestvica.pridobi_goli(10)
+print(a)
+
+b = Lestvica.pridobi_asistence(10)
+print(b)
+
+c = Lestvica.pridobi_avto_goli(10)
+print(c)

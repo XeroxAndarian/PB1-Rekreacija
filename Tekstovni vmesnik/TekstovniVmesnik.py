@@ -95,11 +95,11 @@ def osnovni_meni():
         
     
     if izbira == "2":
-        # sezone_meni()
+        sezona_meni()
         pass
 
     if izbira == "3":
-        # tekme_meni()
+        tekme_meni()
         pass
 
     if izbira == "4":
@@ -169,10 +169,93 @@ def igralec_meni():
         napaka(igralec_meni)
 
     
+def sezona_meni():
+    '''Funkcija nas vodi po meniju do informacij o posamezni sezoni.'''
+    print("=" * 50,
+        "Statistika sezon:",
+        "1 - Trajanje sezon",
+        "2 - Nazaj na začetni zaslon",
+        sep = "\n")
+    izbira = input("--> ")
+
+    if izbira == "1":
+        sezone = model.Sezona.vse_sezone()
+
+        i = 0
+        while i < len(sezone):
+            i+=1
+            print(f"{sezone[i]}")
+
+        print("To je sezanm vseh sezone in njihovih trajanj.")
+        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        osnovni_meni()
+
+
+def tekme_meni():
+    '''Vodi nas po meniju za tekme.'''
+
+    print("=" * 50,
+        "Izberi način iskanja:",
+        "1 - Iskanje po ID",
+        "2 - Iskanje po datumu",
+        "3 - Seznam tekem",
+        "4 - Nazaj na začetni zaslon",
+        sep = "\n")
+    izbira = input("--> ")
+
+    if izbira == "1":
+        izpis_tekme_id()
+
+    if izbira == "2":
+        izpis_tekme_datum()
+    
+
+    if izbira == "4":
+        osnovni_meni()
+
+    else:
+        napaka(tekme_meni)
+
+
         
+def izpis_tekme_id():
+    '''Funkcija sprejme ID tekme in v primeru, da tekma obstaja, vrne podatke o tekmi.'''
+    print("=" * 50)
+    print("Vpiši ID tekme, za katero te zanima statistika:")
+    tekma_id = input("ID tekme: --> ")
+    rezultat = model.Tekma.najdi_tekmo_id(tekma_id)
+    if rezultat.datum == '':
+        print("Tekma s tem ID-jem ne obstaja. Preveri, če si se slučajno zatipkal. Sicer poskusi poiskati drugo tekmo.")
+        izpis_igralca()
+    else: 
+        print(rezultat)
+        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        osnovni_meni()
 
 
+def izpis_tekme_datum():
+    '''Funkcija sprejme ID tekme in v primeru, da tekma obstaja, vrne podatke o tekmi.'''
+    print("=" * 50)
+    print(f"Navedi datum tekme, za katero te zanima statistika:")
+    datum_dan = input("Od: (Dan) --> ")
+    datum_mesec = input("Od: (Mesec) --> ")
+    datum_leto = input("Od: (Leto) --> ")
+    if len(datum_dan) == 1:
+            datum_dan = "0" + datum_dan
 
+    if len(datum_mesec) == 1:
+            datum_mesec = "0" + datum_mesec
+
+    datum = datum_leto + "-" + datum_mesec + "-" + datum_dan
+
+    rezultat = model.Tekma.najdi_tekmo(datum)
+    if rezultat.datum == '':
+        print("Preveri, če si se slučajno zatipkal. Sicer poskusi poiskati drugo tekmo.")
+        tekme_meni()
+    else: 
+        print(rezultat)
+        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        osnovni_meni()
 
 # zaženi
 print("Pozdravljeni v brskalniku statistike rekreacijskega nogometa! Sledite vmesniku, ki vas bo vodil do vaše željene statistike.")
