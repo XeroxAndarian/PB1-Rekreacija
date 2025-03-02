@@ -1,0 +1,62 @@
+osnovni_meni
+
+    -> 1 - Podatki o igralcih
+        -> 1 - Iskanje po ID
+            = Podatki o igralcu v določenem obdobju
+                -> 1 - Natančnejše informacije o igralcu
+                    = vrne natančnejše podatke o igralcu
+                -> 2 - Nazaj
+                    ~> preverže na *Podatki o igralcih*
+                -> 3 - Nazaj na začetni zaslon
+
+        -> 2 - Iskanje po imenu / priimku /vzevku 
+            -> Iz seznama izberi željenega igralca
+                ~> preveže na *Podatki o igralcu v določenem obdobju*
+
+        -> 0 - Nazaj na začetni zaslon
+    
+
+
+    -> 2 - Podatki o tekmah
+
+        -> 1 - Iskanje po ID
+            = Vrne podatke o tekmi
+                -> 1 - Natančnejši Podatki
+                    = Vrne podatke o tekmi in podatke za vsakega igralca
+                -> 2 - Info o igralcu
+                    ~> preverže na *Podatki o igralcu*
+                -> 3 - Nazaj
+                    ~> preveže na *Podatki o tekmah*
+                -> 0 - Nazaj na začetni zaslon
+
+        -> 2 - Iskanje po datumu
+            = vrne podatke o tekmi na izbrani datum
+                ~> preveže na meni o podatkih o tekmi
+
+        -> 3 - Iskanje po obdobju
+            = vrne seznam tekem v izbranem časovnem obdobju
+                    ~> preveže na *Isaknje po ID*
+        
+    -> 3 - Podatki o sezonah
+        = vrne seznam sezon in njihovega trajanja
+        -> 1 - Razširjeni podatki o sezoni
+            -> izberemo sezono
+                -> 1 - Splošni podatki
+                -> 2 - Lestvice
+                    ~> preveže na *Kategorija*
+        -> 0 - Nazaj na začetni zaslon
+
+    -> 4 - Lestvice
+
+        -> 1 - Splošne lestvice
+            -> Kategorija
+                -> Top x
+
+        -> 2 - Za izbrano obdobje
+            ~> preveže na *Kategorija*
+
+        -> 3 - Nazaj na začetni zaslon 
+    
+    -> 0 - Izhod
+
+        

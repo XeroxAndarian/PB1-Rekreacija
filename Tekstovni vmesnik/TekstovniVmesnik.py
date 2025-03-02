@@ -9,10 +9,10 @@ def napaka(f):
     print("Vpisali ste neveljavno izbiro. Prosim, da izberete eno izmed navedenih možnosti.")
     return f()
 
-def meni_casovno_obdobje():
+def meni_casovno_obdobje(prihod):
     '''Funkcija od od uporabnika pridobi informacije o začetku in koncu obdobja, ki ga zanima za igralca in vrne podatke o igralcu iz tega obdobja.'''
     print("=" * 50)
-    print("Od kdaj do kdaj te zanima statistika igralca?:")
+    print("Od kdaj do kdaj te zanima statistika?")
     print("0 - Celotna statistika")
 
     sezone = []
@@ -33,7 +33,7 @@ def meni_casovno_obdobje():
         return ('2000-01-01', '2099-12-31')
     
     if izbira == f"{j}":
-        izpis_igralca()
+        prihod
         return None
     
     if izbira == f"{j+1}":
@@ -41,7 +41,7 @@ def meni_casovno_obdobje():
         return None
     
     if izbira == f"{i}":
-        print(f"Navedi od kdaj do kdaj, te zanima statistika:")
+        print(f"Navedi od kdaj do kdaj, te zanima statistika.\nČe te zanima samo začetni (ali samo končni) datum, ga samo preskoči (enter).")
         zacetek_dan = input("Od: (Dan) --> ")
         zacetek_mesec = input("Od: (Mesec) --> ")
         zacetek_leto = input("Od: (Leto) --> ")
@@ -63,6 +63,13 @@ def meni_casovno_obdobje():
 
         zacetek = zacetek_leto + "-" + zacetek_mesec + "-" + zacetek_dan
         konec = konec_leto + "-" + konec_mesec + "-" + konec_dan
+
+        if zacetek == "--":
+            zacetek = "2000-01-01"
+        
+        if konec == "--":
+            konec = "2099-12-31"
+
         return (zacetek, konec)
     
     if int(izbira) in sezone:
@@ -71,7 +78,7 @@ def meni_casovno_obdobje():
         return(zacetek, konec)
     
     else:
-        napaka(meni_casovno_obdobje)
+        napaka(meni_casovno_obdobje(meni_casovno_obdobje))
 
 
 
@@ -123,10 +130,10 @@ def izpis_igralca():
         print("Igralec s tem ID-jem ne obstaja. Preveri, če si se slučajno zatipkal. Sicer poskusi poiskati drugega igralca.")
         izpis_igralca()
     else: 
-        obdobje = meni_casovno_obdobje()
+        obdobje = meni_casovno_obdobje(izpis_igralca)
         rezultat = model.Igralec.pridobi_statistiko(igralec_id, obdobje[0], obdobje[1])
         print(rezultat)
-        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        input("Pritisnite tipko enter za vrnitev na osnovni meni: --> ")
         osnovni_meni()
     
     
@@ -187,7 +194,7 @@ def sezona_meni():
             print(f"{sezone[i]}")
 
         print("To je sezanm vseh sezone in njihovih trajanj.")
-        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        input("Pritisnite tipko enter za vrnitev na osnovni meni: --> ")
         osnovni_meni()
 
 
@@ -199,7 +206,9 @@ def tekme_meni():
         "1 - Iskanje po ID",
         "2 - Iskanje po datumu",
         "3 - Seznam tekem",
-        "4 - Nazaj na začetni zaslon",
+        "4 - Seznam tekem v časovnem obdobju",
+        "5 - Seznam tekem po igralcu",
+        "0 - Nazaj na začetni zaslon",
         sep = "\n")
     izbira = input("--> ")
 
@@ -208,15 +217,42 @@ def tekme_meni():
 
     if izbira == "2":
         izpis_tekme_datum()
-    
+
+    if izbira == "3":
+        tekme = model.Tekma.vse_tekme()
+        i = 1
+        for tekma in tekme:
+            if i % 10 == 0:
+                print("-" * 50)
+            print(model.Tekma.eno_vrsticni_izpis(tekma))
+            i+=1
+        izpis_tekme_id()
 
     if izbira == "4":
+        obdobje = meni_casovno_obdobje(tekme_meni)
+        tekme = model.Tekma.vse_tekme(obdobje[0], obdobje[1])
+        
+        izpis_tekme_id()
+
+    if izbira == "5":
+        obdobje = meni_casovno_obdobje(tekme_meni)
+        tekme = model.Tekma.tekme_igralca()
+        
+
+    if izbira == "0":
         osnovni_meni()
 
     else:
         napaka(tekme_meni)
 
-
+def izpis_seznama_tekem(tekme):
+    i = 1
+    for tekma in tekme:
+        if i % 10 == 0:
+            print("-" * 50)
+        print(model.Tekma.eno_vrsticni_izpis(tekma))
+        i+=1
+    return None
         
 def izpis_tekme_id():
     '''Funkcija sprejme ID tekme in v primeru, da tekma obstaja, vrne podatke o tekmi.'''
@@ -226,10 +262,10 @@ def izpis_tekme_id():
     rezultat = model.Tekma.najdi_tekmo_id(tekma_id)
     if rezultat.datum == '':
         print("Tekma s tem ID-jem ne obstaja. Preveri, če si se slučajno zatipkal. Sicer poskusi poiskati drugo tekmo.")
-        izpis_igralca()
+        izpis_tekme_id()
     else: 
         print(rezultat)
-        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        input("Pritisnite tipko enter za vrnitev na osnovni meni: --> ")
         osnovni_meni()
 
 
@@ -254,7 +290,7 @@ def izpis_tekme_datum():
         tekme_meni()
     else: 
         print(rezultat)
-        input("Pritisnite poljubno tipko za vrnitev na osnovni meni: --> ")
+        input("Pritisnite tipko enter za vrnitev na osnovni meni: --> ")
         osnovni_meni()
 
 # zaženi
