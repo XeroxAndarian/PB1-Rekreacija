@@ -13,7 +13,7 @@ def napaka(f):
     print("Vpisali ste neveljavno izbiro. Prosim, da izberete eno izmed navedenih možnosti.")
     return f()
 
-def casovno_obdobje(prihod):
+def casovno_obdobje(prihod=""):
     '''Funkcija od od uporabnika pridobi informacije o začetku in koncu obdobja, ki ga zanima za igralca in vrne podatke o igralcu iz tega obdobja.'''
     print("=" * 50)
     print("Od kdaj do kdaj te zanima statistika?")

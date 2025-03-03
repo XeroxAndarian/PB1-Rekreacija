@@ -632,13 +632,19 @@ Seznam tekem:
         return rezultat[0][0]
 
     @staticmethod
-    def vse_sezone(zacetek = PRVIC, konec = "2099-12-31"):
+    def vse_sezone(zacetek = PRVIC, konec = DANES):
         '''Metoda vrne slovar objektov vseh sezon.'''
         sezone = {}
-        poizvedba = """SELECT id
+        if konec == DANES:
+            poizvedba = """SELECT id
                     FROM sezona
-                    WHERE zacetek >= ? AND konec <= ?"""
-        rezultat = conn.execute(poizvedba, [zacetek, konec]).fetchall()
+                    WHERE zacetek >= ?"""
+            rezultat = conn.execute(poizvedba, [zacetek]).fetchall()
+        else:
+            poizvedba = """SELECT id
+                        FROM sezona
+                        WHERE zacetek >= ? AND konec <= ?"""
+            rezultat = conn.execute(poizvedba, [zacetek, konec]).fetchall()
         # print(rezultat)
         for i in rezultat:
             zacetek = Sezona.sezona_zacetek(i[0])
