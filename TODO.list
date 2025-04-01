@@ -10,3 +10,4 @@
     4.4 Podatki o igralcih: Lestvice - SR - Nekatera imena so prazna (tudi v tekstovnem)
     4.5 Tekma z ID-jem 2 ima napačen datum v bazi (9.8.2022 namesto 8.9.2022) in je ni v sezoni 1
     4.6 Lestvice: Avtogoli in SR, enako kot pri sezonah
+5. CSS - lahko naredim še to za lepši prikaz, bi bilo pa smiselno najprej odpravit napake
