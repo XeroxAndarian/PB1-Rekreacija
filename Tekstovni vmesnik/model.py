@@ -38,7 +38,7 @@ class Igralec:
         self.prisotnost = prevedi_None(prisotnost)
         self.goli = prevedi_None(goli)
         self.asistence = prevedi_None(asistence)
-        self.avtogoli = prevedi_None(avtogoli)
+        self.avto_goli = prevedi_None(avtogoli)
 
         self.zacetek = zacetek
         self.konec = konec
@@ -87,7 +87,7 @@ Zmage: {self.zmage}
 Porazi: {self.porazi}
 Goli: {self.goli}
 Asistence: {self.asistence}
-Avtogoli: {self.avtogoli}
+Avtogoli: {self.avto_goli}
 -----------------------------
 """     
         izpis = f"""
@@ -100,7 +100,7 @@ Zmage: {self.zmage}
 Porazi: {self.porazi}
 Goli: {self.goli}
 Asistence: {self.asistence}
-Avtogoli: {self.avtogoli}
+Avtogoli: {self.avto_goli}
 -----------------------------
 MMR: {round(self.mmr)}
 Winstreak: {self.winstreak}
@@ -578,7 +578,7 @@ Ekipa B: {self.ekipa_1}
                 tabela[i] += (" " + ime_priimek + " " * (19 - dolzina_ime))
                 tabela[i] +=  ("|" + " " * len(str(igralec.goli)) + (str(igralec.goli))) 
                 tabela[i] += ("|" + " " * len(str(igralec.asistence)) + (str(igralec.asistence))) 
-                tabela[i] += ("|" + " " * len(str(igralec.avtogoli)) + (str(igralec.avtogoli)))
+                tabela[i] += ("|" + " " * len(str(igralec.avto_goli)) + (str(igralec.avto_goli)))
                 tabela[i] += ("|" * j + "\n" * (abs(j-1)))
                 i+=1
             j-=1
@@ -635,7 +635,7 @@ class Sezona:
         self.tekme = tekme
         self.goli = goli
         self.asistence = assitence
-        self.avtogoli = avtogoli
+        self.avto_goli = avtogoli
 
     def __repr__(self):
         return f"Sezona {self.id} [{self.zacetek} - {self.konec}]"
@@ -653,7 +653,7 @@ Konec: {self.konec}
 Tekem: {self.tekme}
 Golov: {self.goli}
 Asistenc: {self.asistence}
-Avtogolov: {self.avtogoli}
+Avtogolov: {self.avto_goli}
 ---------------
 Seznam tekem:
 """ 
@@ -721,7 +721,7 @@ Seznam tekem:
         self.tekme = rezultat[0][0]
         self.goli = rezultat[0][1]
         self.asistence = rezultat[0][2]
-        self.avtogoli = rezultat[0][3]
+        self.avto_goli = rezultat[0][3]
         return None
     
     ###########################
@@ -856,7 +856,7 @@ def nov_SR(datum, zbirka_SR):
             else:
                 soigralci = ekipa_1_SR
                 nasprotnik = ekipa_0_SR
-            nov_SR = SR_kalkulator(zbirka_SR_kopija[int(igralec.id)], rezultat, igralec.goli, igralec.asistence, igralec.avtogoli, stat_do_sedaj.winstreak, mvp_goli, mvp_asistence, soigralci, nasprotnik, zbirka_SR_kopija)
+            nov_SR = SR_kalkulator(zbirka_SR_kopija[int(igralec.id)], rezultat, igralec.goli, igralec.asistence, igralec.avto_goli, stat_do_sedaj.winstreak, mvp_goli, mvp_asistence, soigralci, nasprotnik, zbirka_SR_kopija)
             zbirka_SR[int(igralec.id)] = nov_SR
             
     zbirka_zbirk_SR[datum] = zbirka_SR
@@ -933,7 +933,7 @@ class Lestvica:
             if self.kategorija == 'Asistence':
                 statistika = f"{str(igralec.asistence)}"
             if self.kategorija == 'Avtogoli':
-                statistika = f"{str(igralec.avtogoli)}"
+                statistika = f"{str(igralec.avto_goli)}"
             if self.kategorija == 'Neodločenosti':
                 statistika = f"{str(igralec.neodlocena)}"
             if self.kategorija == 'winstreak':
@@ -1153,5 +1153,5 @@ class Lestvica:
 # l = Lestvica.pridobi_lestvico_prisotnost("2029-02-21") 
 # print(l)
 # 
-t = Lestvica.pridobi_lestvico_SR("2024-02-01", 0, "2022-09-01")
-print(t)
+# t = Lestvica.pridobi_lestvico_SR("2024-02-01", 0, "2022-09-01")
+# print(t)
