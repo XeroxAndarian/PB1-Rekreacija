@@ -6,8 +6,8 @@
 4. Spletni vmesnik (nepopolno)
     4.1 Podatki o igralcih: Iskanje po ID - Natančnejši podatki - ERROR
     4.2 Podatki o igralcih: Iskanje po imenu - ERROR
-    4.3 Podatki o sezonah: Lestvice - Avtogoli - ERROR (tudi v tekstovnem)
-    4.4 Podatki o igralcih: Lestvice - SR - Nekatera imena so prazna (tudi v tekstovnem)
+    4.3 Podatki o sezonah: Lestvice - Avtogoli - ERROR (tudi v tekstovnem - odpravljeno za tekstovni)
+    4.4 Podatki o igralcih: Lestvice - SR - Nekatera imena so prazna (tudi v tekstovnem - odpravljeno za tekstovni)
     4.5 Tekma z ID-jem 2 ima napačen datum v bazi (9.8.2022 namesto 8.9.2022) in je ni v sezoni 1
     4.6 Lestvice: Avtogoli in SR, enako kot pri sezonah
 5. CSS - lahko naredim še to za lepši prikaz, bi bilo pa smiselno najprej odpravit napake
