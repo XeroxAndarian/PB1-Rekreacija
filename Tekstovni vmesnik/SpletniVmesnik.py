@@ -281,7 +281,7 @@ def splosni_podatki_o_sezoni(id):
         "tekem": sezona.tekme,
         "golov": sezona.goli,
         "asistenc": sezona.asistence,
-        "avtogolov": sezona.avtogoli,
+        "avtogolov": sezona.avto_goli,
         "tekme": []
     }
 
