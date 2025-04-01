@@ -72,9 +72,6 @@ class Igralec:
             self.asistencerate = 0
             self.avtogolirate = 0
     
-
-
-
     def __repr__(self):
         return f"ID:{str(self.id)} > {self.ime} {self.priimek}"
     
@@ -217,6 +214,7 @@ Winstreak: {self.winstreak}
         for igralec in id_igralca:
             rezultat_iskanja.append(Igralec.pridobi_statistiko(igralec[0]))
         return rezultat_iskanja
+
     
     @staticmethod
     def vsi_igralci(zacetek=PRVIC, konec=DANES):
@@ -265,6 +263,38 @@ Winstreak: {self.winstreak}
         self.mmr = MMR(self)
         return None
     
+    # napaka Index out of range
+
+    # @staticmethod
+    # def nastavi_winstreak(self):
+    #     '''Nastavi winstreak igralca.'''
+        
+    #     tekme = Tekma.tekme_igralca(self.id, self.zacetek, self.konec)
+    #     st_tekem = len(tekme)
+    #     winstreak = 0
+
+    #     if st_tekem == 0:
+    #         self.winstreak = 0
+    #         return None
+        
+    #     tekma = tekme[st_tekem-1]
+
+    #     if st_tekem == 1:
+    #         if Tekma.zmagovalec_tekme(tekma.id, self.id):
+    #             self.winstreak = 1
+    #         else:
+    #             winstreak = 0
+    #         return None
+        
+    #     i = 1
+    #     while Tekma.zmagovalec_tekme(tekma.id, self.id):
+    #         winstreak +=1
+    #         tekma = tekme[st_tekem-1-i]
+    #         i+=1
+        
+    #     self.winstreak = winstreak
+    #     return None
+
     @staticmethod
     def nastavi_winstreak(self):
         '''Nastavi winstreak igralca.'''
@@ -275,25 +305,15 @@ Winstreak: {self.winstreak}
 
         if st_tekem == 0:
             self.winstreak = 0
-            return None
-        
-        tekma = tekme[st_tekem-1]
+            return
 
-        if st_tekem == 1:
-            if Tekma.zmagovalec_tekme(tekma.id, self.id):
-                self.winstreak = 1
-            else:
-                winstreak = 0
-            return None
-        
-        i = 1
-        while Tekma.zmagovalec_tekme(tekma.id, self.id):
-            winstreak +=1
-            tekma = tekme[st_tekem-1-i]
-            i+=1
-        
+        i = st_tekem - 1
+        while i >= 0 and Tekma.zmagovalec_tekme(tekme[i].id, self.id):
+            winstreak += 1
+            i -= 1
+
         self.winstreak = winstreak
-        return None
+
 
     @staticmethod
     def naj_strelec(seznam):
@@ -338,6 +358,7 @@ Winstreak: {self.winstreak}
     def nastavi_sr(self):
         self.sr = [SR(self.konec)[self.id]]
         return None
+    
 
 class Tekma:
 
@@ -571,6 +592,39 @@ Ekipa B: {self.ekipa_1}
 
         izpis += "\n"
         return izpis
+    
+    ###########################
+    @staticmethod
+    def get_all():
+        poizvedba = "SELECT * FROM tekma"
+        return conn.execute(poizvedba).fetchall()
+    
+    @staticmethod
+    def get_splosne_lestvice():
+        '''Vrne splošne lestvice na podlagi vseh tekem.'''
+        poizvedba = """
+        SELECT igralec.ime, igralec.priimek, COUNT(prisotnost.tekma_id) AS stevilo_tekem, SUM(prisotnost.goli) AS goli
+        FROM prisotnost
+        JOIN igralec ON prisotnost.igralec_id = igralec.id
+        GROUP BY igralec.id
+        ORDER BY goli DESC
+        """
+        return conn.execute(poizvedba).fetchall()
+    
+    @staticmethod
+    def get_lestvice_obdobje(zacetek, konec):
+        '''Vrne lestvice za določeno obdobje.'''
+        poizvedba = """
+        SELECT igralec.ime, igralec.priimek, COUNT(prisotnost.tekma_id) AS stevilo_tekem, SUM(prisotnost.goli) AS goli
+        FROM prisotnost
+        JOIN igralec ON prisotnost.igralec_id = igralec.id
+        JOIN tekma ON prisotnost.tekma_id = tekma.id
+        WHERE tekma.datum BETWEEN ? AND ?
+        GROUP BY igralec.id
+        ORDER BY goli DESC
+        """
+        return conn.execute(poizvedba, (zacetek, konec)).fetchall()
+    ###########################
 
 class Sezona:
 
@@ -624,7 +678,7 @@ Seznam tekem:
         
 
     def sezona_konec(sezona):
-        '''Metoda vrne koenc sezone.'''
+        '''Metoda vrne konec sezone.'''
         poizvedba = """SELECT konec
                     FROM sezona
                     WHERE sezona = ?"""
@@ -669,6 +723,13 @@ Seznam tekem:
         self.asistence = rezultat[0][2]
         self.avtogoli = rezultat[0][3]
         return None
+    
+    ###########################
+    @staticmethod
+    def get_all():
+        poizvedba = "SELECT * FROM sezona"
+        return conn.execute(poizvedba).fetchall()
+    ###########################
 
 
 
@@ -758,8 +819,6 @@ def nov_SR(datum, zbirka_SR):
         for id_igralec in ekipa[0]:
             ekipa[1].append(Igralec.pridobi_statistiko(str(id_igralec), datum, datum))
             ekipa[2].append(zbirka_SR[id_igralec])
-           
-    
 
     zbirka_SR_kopija = zbirka_SR.copy()
     mvp = Tekma.mvp(tekma)
@@ -768,7 +827,6 @@ def nov_SR(datum, zbirka_SR):
         if igralec == None:
             igralec = Igralec.pridobi_statistiko(0)
             
-    
     for ekipa in [ekipa_0, ekipa_1]:
         mvp_goli, mvp_asistence = False, False
         rezultat = 0
@@ -836,12 +894,15 @@ def SR(datum):
 
 class Lestvica:
 
-    def __init__(self, kategorija="", datum="", stevilo=0, vsebina=[], zacetek = ""):
+    def __init__(self, kategorija="", datum="", stevilo=0, vsebina=[], zacetek = "", konec=""):
         self.kategorija = kategorija
         self.stevilo = stevilo
         self.vsebina = vsebina
         self.datum = datum
         self.zacetek = zacetek
+        ###########################
+        self.konec = konec
+        ###########################
 
     def __repr__(self):
         if self.stevilo == 0:
@@ -849,11 +910,12 @@ class Lestvica:
         else:
             return f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija} za obdobje: {self.zacetek} - {self.datum}."
 
+
     def __str__(self):
         if self.stevilo == 0:
             uvod = f"Lestvica najboljših v kategoriji: {self.kategorija}.\nOd: {self.zacetek}\nDo: {self.datum}\n"
         else:
-            uvod = f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija}.\nOd: {self.zacetek}\nDo: {self.datum}\n"      
+            uvod = f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija}.\nOd: {self.zacetek}\nDo: {self.datum}\n"
 
         premor = "-" * 50 + "\n"
         jedro = ""
@@ -906,15 +968,15 @@ class Lestvica:
         if kategorija == "Asistence":
             return "asistence"
         if kategorija == "Avtogoli":
-            return "avto_goli"
+            return "avtogoli" # avto_goli
         if kategorija == "Prisotnost":
             return "prisotnost"
         if kategorija == "Zmage":
             return "zmage"
         if kategorija == "Porazi":
             return "porazi"
-        if kategorija == "Neodlocene":
-            return "neodlocene"
+        if kategorija == "Neodločenosti":
+            return "neodlocena"
         if kategorija == "MMR":
             return "mmr"
         if kategorija == "Winrate":
@@ -936,6 +998,28 @@ class Lestvica:
         else:
             return kategorija
         
+    ###############
+    @staticmethod
+    def prevedi_kategorijo(kategorija):
+        slovar = {
+            "Goli": "goli",
+            "Asistence": "asistence",
+            "Avtogoli": "avto_goli",
+            "Prisotnost": "prisotnost",
+            "Zmage": "zmage",
+            "Porazi": "porazi",
+            "Neodločenosti": "neodlocena",
+            "MMR": "mmr",
+            "Winrate": "winrate",
+            "Lossrate": "lossrate",
+            "Tierate": "tierate",
+            "Goalrate": "golirate",
+            "Assistencerate": "asistencerate",
+            "AGrate": "avtogolirate",
+            "SR": "sr"
+        }
+        return slovar.get(kategorija, kategorija)
+    ###############
 
 
     @staticmethod
@@ -1021,7 +1105,6 @@ class Lestvica:
         def sortiraj_igralce(igralci, atribut, padajoce=True):
             return sorted(igralci.values(), key=lambda igralec: getattr(igralec, atribut), reverse=padajoce)
         
-        
         seznam_igralcev = sortiraj_igralce(igralci, kat)
         if stevilo == 0:
             vsebina = seznam_igralcev
@@ -1060,6 +1143,13 @@ class Lestvica:
             vsebina = seznam_igralcev[:stevilo]
 
         return Lestvica("SR", datum, stevilo, vsebina, PRVIC)
+    
+    ###########################
+    @staticmethod
+    def get_all():
+        poizvedba = "SELECT * FROM lestvice"
+        return conn.execute(poizvedba).fetchall()
+    ###########################
 
 # l = Lestvica.pridobi_lestvico_prisotnost("2029-02-21") 
 # print(l)

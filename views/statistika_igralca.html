@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistika igralca</title>
+</head>
+<body>
+    <h1>Statistika igralca za izbrano sezono</h1>
+
+    % if stat:
+        <ul>
+            <li><strong>ID:</strong> {{ stat.id }}</li>
+            <li><strong>Ime:</strong> {{ stat.ime }}</li>
+            <li><strong>Priimek:</strong> {{ stat.priimek }}</li>
+            <li><strong>Prisotnost:</strong> {{ stat.prisotnost }}</li>
+            <li><strong>Zmage:</strong> {{ stat.zmage }}</li>
+            <li><strong>Porazi:</strong> {{ stat.porazi }}</li>
+            <li><strong>Goli:</strong> {{ stat.goli }}</li>
+            <li><strong>Asistence:</strong> {{ stat.asistence }}</li>
+            <li><strong>Avtogoli:</strong> {{ stat.avtogoli }}</li>
+            <li><strong>Obdobje:</strong> {{ stat.zacetek }} – {{ stat.konec }}</li>
+        </ul>
+    % else:
+        <p>Ni podatkov za izbrano sezono.</p>
+    % end
+
+    <p><a href="/igralec/id/{{stat.id}}/sezona">Nazaj</a></p>
+</body>
+</html>

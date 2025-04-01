@@ -85,6 +85,7 @@ def casovno_obdobje(prihod):
     else:
         napaka(casovno_obdobje)
 
+
 def popravi_napako(ponovitev, prihod):
     '''V primeru napačnega vnosa vpraša uporabnika ali želi ponovo vpisati poizvedbo ali se vrniti nazaj na osnovni meni.'''
     print("=" * 50)
@@ -254,7 +255,6 @@ def osnovni_meni():
     if izbira == "1":
         meni_igralec()
         pass
-        
     
     if izbira == "2":
         tekme_meni()
@@ -466,7 +466,6 @@ def lestvice_meni():
     if izbira == "2":
         obdobje = casovno_obdobje(lestvice_meni)
         izbira_kateogirje(lestvice_meni, obdobje[1], obdobje[0])
-
     
 
 def izbira_kateogirje(prihod, datum=DANES, zacetek = PRVIC):
@@ -478,7 +477,6 @@ def izbira_kateogirje(prihod, datum=DANES, zacetek = PRVIC):
 
     if izbira == "0":
         osnovni_meni()
-
     
     try:
         x = int(izbira)

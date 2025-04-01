@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meni lestvice</title>
+</head>
+<body>
+
+
+<!-- Meni lestvice -->
+% if prikazi == 'meni':
+    <h1>Izberite vrsto lestvic</h1>
+    <ul>
+        <li><a href="/lestvice/splosne">Splošne lestvice</a></li>
+        <li><a href="/lestvice/obdobje">Lestvice za izbrano obdobje</a></li>
+    </ul>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Splošne lestvice -->
+% if prikazi == 'seznam_kategorij':
+    <h1>Splošne lestvice</h1>
+    <p>Izberi kategorijo, za katero želiš prikazano lestvico:</p>
+    <ul>
+    % for kategorija in kategorije:
+        <li><a href="/lestvice/splosne/{{kategorija}}">{{kategorija}}</a></li>
+    % end
+    </ul>
+    <p><a href="/lestvice">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Prikaz izbrane lestvice -->
+% if prikazi == 'ena_lestvica':
+    <h1>{{kategorija}}</h1>
+    <p>Statistika za kategorijo: {{kategorija}}</p>
+    <ol>
+    % for igralec in lestvica:
+        % vrednost = getattr(igralec, atribut.lower(), None)
+        <li>
+            {{igralec.ime}} {{igralec.priimek}} – 
+            % if kategorija == "MMR":
+                {{int(round(vrednost)) if vrednost is not None else ''}}
+            % elif kategorija in ["Winrate", "Lossrate", "Tierate", "Goalrate", "Assistencerate", "AGrate"]:
+                {{'%.2f' % vrednost if vrednost is not None else ''}}
+            % elif kategorija == "SR":
+                % if vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (tuple, list)):
+                    {{'%.0f' % vrednost[0][0]}}
+                % elif vrednost and isinstance(vrednost[0], (int, float)):
+                    {{'%.0f' % vrednost[0]}}
+                % else:
+                    1010
+                % end
+            % else:
+                {{vrednost}}
+            % end
+        </li>
+    % end
+    </ol>
+    <p><a href="/lestvice/splosne">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Lestvice za izbrano obdobje -->
+% if prikazi == 'obdobje':
+    <h2>Izberi obdobje za lestvico</h2>
+    <form method="post" action="/lestvice/obdobje/izberi">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <label for="izbira">Izberi obdobje:</label>
+            <select name="izbira" id="izbira" onchange="prikaziPoMeri(this.value)">
+                % for id, sez in sezone.items():
+                    % if str(id).isdigit() and int(id) <= 6:
+                        <option value="{{id}}">Sezona {{id}} [{{sez['zacetek']}} – {{sez['konec']}}]</option>
+                    % end
+                % end
+                <option value="7">Celotna statistika</option>
+                <option value="8">Po meri</option>
+            </select>
+            <input type="submit" value="Nadaljuj">
+        </div>
+
+        <div id="meri" style="display:none; margin-top: 10px;">
+            <label for="zacetek">Od:</label>
+            <input type="date" name="zacetek" id="zacetek"><br>
+            <label for="konec">Do:</label>
+            <input type="date" name="konec" id="konec"><br>
+        </div>
+    </form>
+
+    <script>
+        function prikaziPoMeri(izbira) {
+            document.getElementById("meri").style.display = (izbira === "8") ? "block" : "none";
+        }
+    </script>
+
+    <p><a href="/lestvice">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Izbira kategorije po obdobju -->
+% if prikazi == 'seznam_kategorij_obdobje':
+    <h1>Lestvice</h1>
+    <p>Obdobje: od {{zacetek}} do {{konec}}</p>
+    <p>Izberi kategorijo za prikaz:</p>
+    <ul>
+    % for kategorija in kategorije:
+        <li><a href="/lestvice/obdobje/{{zacetek}}/{{konec}}/{{kategorija}}">{{kategorija}}</a></li>
+    % end
+    </ul>
+    <p><a href="/lestvice/obdobje">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Prikaz lestvic po obdobju -->
+% if prikazi == 'rezultati':
+    <h1>Lestvice</h1>
+    <p>
+        Obdobje:
+        % if zacetek == "0000-01-01" and konec == "9999-12-31":
+            Celotna statistika
+        % else:
+            {{zacetek}} do {{konec}}
+        % end
+    </p>
+
+    % for kategorija, obj in lestvice.items():
+        <h2>{{kategorija}}</h2>
+        <ol>
+        % for igralec in obj.vsebina:
+        <li>{{igralec.ime}} {{igralec.priimek}} – {{getattr(igralec, obj.kategorija.lower(), '')}}</li>
+        % end
+        </ol>
+    % end
+
+    <p><a href="/lestvice">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+</body>
+</html>

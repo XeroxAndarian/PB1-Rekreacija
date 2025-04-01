@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Podatki o tekmah</title>
+</head>
+<body>
+
+
+<!-- Meni tekme -->
+% if prikazi == 'meni':
+    <h1>Podatki o tekmah</h1>
+    <p><a href="/tekma/id">Iskanje po ID</a></p>
+    <p><a href="/tekma/datum">Iskanje po datumu</a></p>
+    <p><a href="/tekma/obdobje">Iskanje po obdobju</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Vnos ID -->
+% if prikazi == 'id' and not tekma:
+    <h1>Iskanje tekme po ID</h1>
+    <form method="get" onsubmit="this.action = '/tekma/id/' + document.getElementById('id').value;">
+        <label for="id">Vnesi ID tekme:</label>
+        <input type="number" id="id" name="id" required>
+        <button type="submit">Išči</button>
+    </form>
+    <p><a href="/tekme">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Osnovni podatki o tekmi -->
+% if prikazi == 'id' and tekma:
+    <h2>Podatki o tekmi</h2>
+    <ul>
+        <li><strong>ID:</strong> {{ tekma['id'] }}</li>
+        <li><strong>Datum:</strong> {{ tekma['datum'] }}</li>
+        <li><strong>Rezultat A:B:</strong> {{ tekma['goli_a'] }} : {{ tekma['goli_b'] }}</li>
+        <li><strong>Ekipa A:</strong>
+            <ul>
+            % for igralec in tekma['ekipa_a']:
+                <li>{{ igralec }}</li>
+            % end
+            </ul>
+        </li>
+        <li><strong>Ekipa B:</strong>
+            <ul>
+            % for igralec in tekma['ekipa_b']:
+                <li>{{ igralec }}</li>
+            % end
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Natančnejši podatki o tekmi in igralcih tekme:</h3>
+    <ul>
+        <li><a href="/tekma/{{tekma['id']}}/natančno">Natančnejši podatki o tekmi</a></li>
+        <li><a href="/igralec/id">Podatki o igralcu</a></li>
+    </ul>
+
+    <p><a href="/tekma/id">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Dodatne možnosti za tekmo -->
+% if prikazi == 'moznosti':
+    <h2>Tekma ID: {{tekma["id"]}}</h2>
+    <p>Datum: {{tekma["datum"]}}</p>
+    <p>Rezultat: {{tekma["goli_a"]}} : {{tekma["goli_b"]}}</p>
+
+    <h3>Želite natančnejše podatke o tekmi in igralcih tekme?</h3>
+    <ul>
+        <li><a href="/tekma/{{tekma['id']}}/natančno">Natančnejši podatki o tekmi</a></li>
+        <li><a href="/igralec/meni">Podatki o igralcu</a></li>
+    </ul>
+
+    <p><a href="/tekma/id">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Dodatni izpis tekme -->
+% if prikazi == 'natančno':
+    <h2>Natančnejši podatki o tekmi</h2>
+    <pre>{{izpis}}</pre>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Iskanje po datumu -->
+% if prikazi == 'datum':
+    <h1>Iskanje tekme po datumu</h1>
+    <form method="get" action="/tekma/datum">
+        <label for="datum">Vnesi datum tekme (YYYY-MM-DD):</label>
+        <input type="date" id="datum" name="datum" required>
+        <button type="submit">Išči</button>
+    </form>
+
+    % if datum:
+        % if tekme:
+            <h2>Najdene tekme za datum {{datum}}:</h2>
+            <ul>
+            % for tekma in tekme:
+                <li>ID: {{tekma["id"]}}, Datum: {{tekma["datum"]}}, Rezultat: {{tekma["goli_a"]}} : {{tekma["goli_b"]}}</li>
+            % end
+            </ul>
+            % if len(tekme) == 1:
+                <h3>Natančnejši podatki o tekmi in igralcih tekme:</h3>
+                <ul>
+                    <li><a href="/tekma/{{tekme[0]['id']}}/natančno">Natančnejši podatki tekme</a></li>
+                    <li><a href="/igralec/meni">Podatki o igralcu</a></li>
+                </ul>
+            % end
+        % else:
+            <h2>Na dan {{ datum }} ni bilo nobene tekme.</h2>
+        % end
+    % end
+
+    <p><a href="/tekme">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Iskanje po obdobju -->
+% if prikazi == 'obdobje':
+    <h2>Izberi obdobje za statistiko</h2>
+    <form method="post" action="/tekma/obdobje/izberi">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <label for="izbira">Izberi obdobje:</label>
+            <select name="izbira" id="izbira" onchange="prikaziPoMeri(this.value)">
+                % for id, sez in sezone.items():
+                    % if str(id).isdigit() and int(id) <= 6:
+                        <option value="{{id}}">Sezona {{id}} [{{sez['zacetek']}} – {{sez['konec']}}]</option>
+                    % end
+                % end
+                <option value="7">Celotna statistika</option>
+                <option value="8">Po meri</option>
+            </select>
+            
+            <input type="submit" value="Išči">
+        </div>
+
+        <div id="meri" style="display:none; margin-top: 10px;">
+            <label for="zacetek">Od:</label>
+            <input type="date" name="zacetek" id="zacetek"><br>
+            <label for="konec">Do:</label>
+            <input type="date" name="konec" id="konec"><br>
+        </div>
+    </form>
+
+    <script>
+        function prikaziPoMeri(izbira) {
+            document.getElementById("meri").style.display = (izbira === "8") ? "block" : "none";
+        }
+    </script>
+
+    % if tekme is not None:
+        % if tekme:
+            <div style="margin-top: 20px;">
+                <p>Najdene tekme za obdobje od {{zacetek}} do {{konec}}:</p>
+                <ul>
+                % for tekma in tekme:
+                <li>
+                    ID: {{tekma["id"]}}, Rezultat: {{tekma["goli_a"]}} : {{tekma["goli_b"]}}, Datum: {{tekma["datum"]}}<br>
+                    <a href="/tekma/{{tekma['id']}}/moznosti">Več o tekmi</a>
+                </li>                
+                % end
+                </ul>
+            </div>
+        % else:
+            <p style="margin-top: 20px;">V tem obdobju ni bilo najdenih tekem.</p>
+        % end
+    % end
+
+    <p><a href="/tekme">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Meni igralec</title>
+</head>
+<body>
+
+
+<!-- Meni igralec -->
+% if prikazi == 'meni':
+    <h1>Izberi način iskanja igralca</h1>
+    <ul>
+        <li><a href="/igralec/id">Iskanje po ID</a></li>
+        <li><a href="/igralec/ime">Iskanje po imenu / priimku / vzdevku</a></li>
+    </ul>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Iskanje po ID -->
+% if prikazi == 'id':
+    <h1>Iskanje igralca po ID</h1>
+    <form method="get" onsubmit="this.action = '/igralec/id/' + document.getElementById('id').value;">
+        <label for="id">Vnesi ID igralca:</label>
+        <input type="number" id="id" name="id" required>
+        <button type="submit">Išči</button>
+    </form>
+    <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Iskanje po imenu -->
+% if prikazi == 'ime':
+    <h1>Iskanje igralca po imenu, priimku ali vzdevku</h1>
+    <form action="/igralec/iskanje" method="post">
+        <label for="ime">Vnesi iskani niz:</label>
+        <input type="text" id="ime" name="ime" required>
+        <input type="submit" value="Išči">
+    </form>
+    <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Rezultati iskanja po imenu -->
+% if prikazi == "rezultati_iskanja":
+    <h1>Rezultati iskanja:</h1>
+    <ul>
+    % for igralec in igralci:
+        % assert hasattr(igralec, 'id'), f"NAPAKA: {igralec} nima .id"
+        <li>
+            ID: {{igralec.id}} – {{igralec.ime}} {{igralec.priimek}}
+            (<a href="/igralec/id/{{igralec.id}}">Izberi</a>)
+        </li>
+    % end
+    </ul>
+    <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Podatki o enem igralcu -->
+% if prikazi == 'podatki':
+    <h1>Podatki o igralcu</h1>
+    % if igralec:
+        <ul>
+            <li><strong>ID:</strong> {{ igralec.id }}</li>
+            <li><strong>Ime:</strong> {{ igralec.ime }}</li>
+            <li><strong>Priimek:</strong> {{ igralec.priimek }}</li>
+            <li><strong>Prisotnost:</strong> {{ igralec.prisotnost }}</li>
+            <li><strong>Zmage:</strong> {{ igralec.zmage }}</li>
+            <li><strong>Porazi:</strong> {{ igralec.porazi }}</li>
+            <li><strong>Goli:</strong> {{ igralec.goli }}</li>
+            <li><strong>Asistence:</strong> {{ igralec.asistence }}</li>
+            <li><strong>Avtogoli:</strong> {{ igralec.avtogoli }}</li>
+        </ul>
+        <p><a href="/igralec/id/{{ igralec.id }}/sezona">Prikaži statistiko po sezoni</a></p>
+    % else:
+        <p>Igralec ni najden.</p>
+    % end
+    <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Izbira obdobja za statistiko -->
+% if prikazi == 'obdobje':
+    <h2>Izberi obdobje za statistiko</h2>
+    <form method="post" action="/igralec/{{id}}/statistika">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <label for="izbira">Izberi obdobje:</label>
+            <select name="izbira" id="izbira" onchange="prikaziPoMeri(this.value)">
+                % for sezona in sezone:
+                    <option value="{{sezona[0]}}">Sezona {{sezona[0]}} [{{sezona[1]}} – {{sezona[2]}}]</option>
+                % end
+                <option value="7">Celotna statistika</option>
+                <option value="8">Po meri</option>
+            </select>
+            <input type="submit" value="Prikaži statistiko">
+        </div>        
+    
+        <div id="meri" style="display:none; margin-top: 10px;">
+            <label for="zacetek">Od:</label>
+            <input type="date" name="zacetek" id="zacetek"><br>
+            <label for="konec">Do:</label>
+            <input type="date" name="konec" id="konec"><br>
+        </div>
+
+    </form>
+    
+    <script>
+        function prikaziPoMeri(izbira) {
+            document.getElementById("meri").style.display = (izbira === "8") ? "block" : "none";
+        }
+    </script>
+    
+    <p><a href="/igralec/id">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Izpis statistike igralca -->
+% if prikazi == "statistika":
+    <h2>Statistika igralca</h2>
+    <p>Statistika igralca z ID {{ stat.id }} za obdobje od {{ stat.zacetek }} do {{ stat.konec }}:</p>
+    <ul>
+        <li><strong>ID:</strong> {{ stat.id }}</li>
+        <li><strong>Ime:</strong> {{ stat.ime }}</li>
+        <li><strong>Priimek:</strong> {{ stat.priimek }}</li>
+        <li><strong>Prisotnost:</strong> {{ stat.prisotnost }}</li>
+        <li><strong>Zmage:</strong> {{ stat.zmage }}</li>
+        <li><strong>Porazi:</strong> {{ stat.porazi }}</li>
+        <li><strong>Goli:</strong> {{ stat.goli }}</li>
+        <li><strong>Asistence:</strong> {{ stat.asistence }}</li>
+        <li><strong>Avtogoli:</strong> {{ stat.avtogoli }}</li>
+    </ul>
+    <p><a href="/igralec/{{ stat.id }}/natančno">Natančnejši podatki o igralcu</a></p>
+    <p><a href="/igralec/id/{{ stat.id }}">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Natančnejši podatki o igralcu -->
+% if prikazi == 'natančno':
+    <h2>Natančnejši podatki o igralcu</h2>
+    <p><strong>{{igralec.ime}} {{igralec.priimek}}</strong> (ID: {{igralec.id}})</p>
+    <ul>
+    % for sezona, podatki in sezonski_SR.items():
+        <li>
+            <strong>Sezona {{sezona}}</strong> —
+            MMR: {{podatki["mmr"]}}, Winstreak: {{podatki["winstreak"]}}, SR: {{podatki["sr"]}}
+        </li>
+    % end
+    </ul>
+    <p><a href="/igralec/id/{{igralec.id}}">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+</body>
+</html>

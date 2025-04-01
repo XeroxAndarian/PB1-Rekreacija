@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podatki o sezonah</title>
+</head>
+<body>
+
+
+<!-- Izberi sezono -->
+% if prikazi == 'izberi':
+    <h1>Izberite sezono, ki vas zanima</h1>
+
+    <ul>
+    % for sez in sezone:
+        <li> 
+            <a href="/sezona/{{sez['id']}}">Sezona {{ sez["id"] }} [{{ sez["zacetek"] }} - {{ sez["konec"] }}]</a>
+        </li>
+    % end
+    </ul>
+    
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Podrobnosti o sezoni -->
+% if prikazi == 'podrobnosti':
+    <h1>Kaj več vas zanima o izbrani sezoni?</h1>
+    <ul>
+        <li><a href="/sezona/{{sezona_id}}/splosni">Splošni podatki</a></li>
+        <li><a href="/sezona/{{sezona_id}}/lestvice">Lestvice</a></li>
+    </ul>
+
+    <p><a href="/sezone">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Splošni podatki o sezoni -->
+% if prikazi == 'splošni':
+    <h1>Splošni podatki za sezono {{id}}</h1>
+    <p><strong>Začetek:</strong> {{zacetek}}</p>
+    <p><strong>Konec:</strong> {{konec}}</p>
+    <p><strong>Tekem:</strong> {{podatki["tekem"]}}</p>
+    <p><strong>Golov:</strong> {{podatki["golov"]}}</p>
+    <p><strong>Asistenc:</strong> {{podatki["asistenc"]}}</p>
+    <p><strong>Avtogolov:</strong> {{podatki["avtogolov"]}}</p>    
+
+    <h2>Seznam tekem:</h2>
+    <ul>
+    % for tekma in podatki["tekme"]:
+        <li>Tekma ID: {{tekma["id"]}}; datum: {{tekma["datum"]}} → A:B = {{tekma["goli_a"]}}:{{tekma["goli_b"]}}</li>
+    % end
+    </ul>
+
+    <p><a href="/sezona/{{id}}">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Izbira kategorije za lestvico -->
+% if prikazi == 'kategorije_lestvic':
+    <h1>Katera lestvica vas zanima za izbrano sezono?</h1>
+    <p>Obdobje: od {{zacetek}} do {{konec}}</p>
+    <ul>
+    % for kategorija in kategorije:
+        <li><a href="/sezona/{{sezona_id}}/lestvice/{{kategorija}}">{{kategorija}}</a></li>
+    % end
+    </ul>
+    <p><a href="/sezona/{{sezona_id}}">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Prikaz izbrane lestvice -->
+% if prikazi == 'ena_lestvica':
+    <h1>Lestvica: {{kategorija}}</h1>
+    <p>Obdobje: od {{zacetek}} do {{konec}}</p>
+    <ul>
+    % for vrstica in lestvica:
+    <li>
+        {{vrstica.ime}} {{vrstica.priimek}} – 
+        % vrednost = getattr(vrstica, atribut)
+        % if kategorija == "MMR":
+            {{int(round(vrednost))}}
+        % elif kategorija in ["Winrate", "Lossrate", "Tierate", "Goalrate", "Assistencerate", "AGrate"]:
+            {{'%.2f' % vrednost}}
+        % elif kategorija == "SR":
+            % if vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (tuple, list)):
+                {{'%.0f' % vrednost[0][0]}}
+            % elif vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (int, float)):
+                {{'%.0f' % vrednost[0]}}
+            % else:
+                1010
+            % end
+        % else:
+            {{vrednost}}
+        % end
+    </li>    
+    
+    % end
+    </ul>
+    <p><a href="/sezona/{{id}}/lestvice">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+</body>
+</html>

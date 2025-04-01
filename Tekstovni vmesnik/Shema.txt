@@ -9,7 +9,7 @@ osnovni_meni
                     ~> preverže na *Podatki o igralcih*
                 -> 3 - Nazaj na začetni zaslon
 
-        -> 2 - Iskanje po imenu / priimku /vzevku 
+        -> 2 - Iskanje po imenu/priimku/vzdevku 
             -> Iz seznama izberi željenega igralca
                 ~> preveže na *Podatki o igralcu v določenem obdobju*
 

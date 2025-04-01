@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <title>Izberi sezono</title>
+</head>
+<body>
+    <h2>Izberi sezono za igralca ID {{id_igralca}}</h2>
+
+    <form action="/igralec/statistika" method="post">
+        <input type="hidden" name="id_igralca" value="{{id_igralca}}">
+        <label for="id_sezone">Sezona:</label>
+        <select name="id_sezone" id="id_sezone" required>
+            % for id, sez in sezone.items():
+                <option value="{{id}}">Sezona {{id}} [{{sez.zacetek}} – {{sez.konec}}]</option>
+            % end
+        </select>
+        <button type="submit">Prikaži statistiko</button>
+    </form>
+
+    <p><a href="/igralec/meni">Nazaj</a></p>
+</body>
+</html>
