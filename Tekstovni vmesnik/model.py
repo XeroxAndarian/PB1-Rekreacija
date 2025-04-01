@@ -968,7 +968,7 @@ class Lestvica:
         if kategorija == "Asistence":
             return "asistence"
         if kategorija == "Avtogoli":
-            return "avtogoli" # avto_goli
+            return "avto_goli" 
         if kategorija == "Prisotnost":
             return "prisotnost"
         if kategorija == "Zmage":
@@ -1116,13 +1116,6 @@ class Lestvica:
     @staticmethod
     def pridobi_lestvico_SR(datum, stevilo=0,  zacetek = PRVIC):
         '''Vrne lestvico najboljsih (stevilo) za kategorijo zmage / porazi / neodlocene / MMR / winrate / winstreak.'''
-        igralci = Igralec.vsi_igralci(zacetek, datum)
-        prazni = []
-        for igralec_id in igralci:
-            if igralci[igralec_id].ime == "":
-                prazni.append(igralec_id)
-        for igralec_id in prazni:
-            del igralci[igralec_id]
 
         zbirka_SR = SR(datum)
        
@@ -1141,8 +1134,14 @@ class Lestvica:
             vsebina = seznam_igralcev
         else:
             vsebina = seznam_igralcev[:stevilo]
+        
+        koncni = []
 
-        return Lestvica("SR", datum, stevilo, vsebina, PRVIC)
+        for i in range(len(vsebina)):
+            if vsebina[i].ime != "":
+                koncni.append(vsebina[i])
+
+        return Lestvica("SR", datum, stevilo, koncni, PRVIC)
     
     ###########################
     @staticmethod
@@ -1154,5 +1153,5 @@ class Lestvica:
 # l = Lestvica.pridobi_lestvico_prisotnost("2029-02-21") 
 # print(l)
 # 
-# t = Lestvica.pridobi_lestvico_SR("2024-02-01", 0, "2022-09-01")
-# print(t)
+t = Lestvica.pridobi_lestvico_SR("2024-02-01", 0, "2022-09-01")
+print(t)
