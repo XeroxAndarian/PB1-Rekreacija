@@ -3,19 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <title>Podatki o tekmah</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            color: #2e7d32;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            background-color: #e8f5e9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-left: 5px solid #43a047;
+        }
+
+        a {
+            color: #1b5e20;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-width: 500px;
+        }
+
+        label {
+            display: inline-block;
+            width: 140px;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: calc(100% - 150px);
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #2e7d32;
+        }
+
+        pre {
+            background-color: #f1f8e9;
+            padding: 10px;
+            border-left: 4px solid #c5e1a5;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .link-menu ul li {
+            padding: 12px 16px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-
+<div class="container">
 
 <!-- Meni tekme -->
 % if prikazi == 'meni':
     <h1>Podatki o tekmah</h1>
-    <p><a href="/tekma/id">Iskanje po ID</a></p>
-    <p><a href="/tekma/datum">Iskanje po datumu</a></p>
-    <p><a href="/tekma/obdobje">Iskanje po obdobju</a></p>
+    <div class="link-menu">
+        <ul>
+            <li><a href="/tekma/id">Iskanje po ID</a></li>
+            <li><a href="/tekma/datum">Iskanje po datumu</a></li>
+            <li><a href="/tekma/obdobje">Iskanje po obdobju</a></li>
+        </ul>
+    </div>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Vnos ID -->
 % if prikazi == 'id' and not tekma:
@@ -28,7 +119,6 @@
     <p><a href="/tekme">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Osnovni podatki o tekmi -->
 % if prikazi == 'id' and tekma:
@@ -59,10 +149,16 @@
         <li><a href="/igralec/id">Podatki o igralcu</a></li>
     </ul>
 
-    <p><a href="/tekma/id">Nazaj</a></p>
+    <p><a href="/tekme">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
+<!-- Neobstoječa tekma po ID -->
+% if prikazi == 'ni_id':
+    <h2>Za iskani ID "{{iskani_id}}" ni bilo najdene nobene tekme.</h2>
+    <p><a href="/tekma/id">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
 
 <!-- Dodatne možnosti za tekmo -->
 % if prikazi == 'moznosti':
@@ -80,14 +176,12 @@
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
 <!-- Dodatni izpis tekme -->
 % if prikazi == 'natančno':
     <h2>Natančnejši podatki o tekmi</h2>
     <pre>{{izpis}}</pre>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Iskanje po datumu -->
 % if prikazi == 'datum':
@@ -114,14 +208,13 @@
                 </ul>
             % end
         % else:
-            <h2>Na dan {{ datum }} ni bilo nobene tekme.</h2>
+            <h2>Na dan "{{ datum }}" ni bilo nobene tekme.</h2>
         % end
     % end
 
     <p><a href="/tekme">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Iskanje po obdobju -->
 % if prikazi == 'obdobje':
@@ -162,15 +255,15 @@
                 <p>Najdene tekme za obdobje od {{zacetek}} do {{konec}}:</p>
                 <ul>
                 % for tekma in tekme:
-                <li>
-                    ID: {{tekma["id"]}}, Rezultat: {{tekma["goli_a"]}} : {{tekma["goli_b"]}}, Datum: {{tekma["datum"]}}<br>
-                    <a href="/tekma/{{tekma['id']}}/moznosti">Več o tekmi</a>
-                </li>                
+                    <li>
+                        ID: {{tekma["id"]}}, Rezultat: {{tekma["goli_a"]}} : {{tekma["goli_b"]}}, Datum: {{tekma["datum"]}}<br>
+                        <a href="/tekma/{{tekma['id']}}/moznosti">Več o tekmi</a>
+                    </li>                
                 % end
                 </ul>
             </div>
         % else:
-            <p style="margin-top: 20px;">V tem obdobju ni bilo najdenih tekem.</p>
+            <h2>V obdobju od "{{zacetek}}" do "{{konec}}" ni bilo najdene nobene tekme.</h2>
         % end
     % end
 
@@ -178,6 +271,6 @@
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
+</div>
 </body>
 </html>

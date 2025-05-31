@@ -5,16 +5,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Osnovni meni</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2e7d32;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-width: 600px;
+        }
+
+        li {
+            background-color: #e8f5e9;
+            margin-bottom: 10px;
+            padding: 12px 16px;
+            border-left: 5px solid #43a047;
+        }
+
+        li a {
+            color: #1b5e20;
+            text-decoration: none;
+            display: block;
+        }
+
+        li a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Dobrodošli v aplikaciji Rekreacija!</h1>
-    <p>Izberite, kaj bi si radi ogledali:</p>
-    <p><a href="/igralec/meni">Podatki o igralcih</a></p>
-    <p><a href="/tekme">Podatki o tekmah</a></p>
-    <p><a href="/sezone">Podatki o sezonah</a></p>
-    <p><a href="/lestvice">Lestvice</a></p>
-
+    <div class="container">
+        <h1>Dobrodošli v aplikaciji Rekreacija!</h1>
+        <p>Izberite, kaj bi si radi ogledali:</p>
+        <ul>
+            <li><a href="/igralec/meni">Podatki o igralcih</a></li>
+            <li><a href="/tekme">Podatki o tekmah</a></li>
+            <li><a href="/sezone">Podatki o sezonah</a></li>
+            <li><a href="/lestvice">Lestvice</a></li>
+        </ul>
+    </div>
 </body>
 
 </html>

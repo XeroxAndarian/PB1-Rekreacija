@@ -3,9 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <title>Meni igralec</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #2e7d32; /* temno zelena */
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            background-color: #e8f5e9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-left: 5px solid #43a047;
+        }
+
+        a {
+            color: #1b5e20;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-width: 500px;
+        }
+
+        label {
+            display: inline-block;
+            width: 140px;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: calc(100% - 150px);
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #2e7d32;
+        }
+
+        p {
+            margin-top: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+    </style>
 </head>
 <body>
-
+<div class="container">
 
 <!-- Meni igralec -->
 % if prikazi == 'meni':
@@ -27,6 +107,14 @@
         <button type="submit">Išči</button>
     </form>
     <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Ni zadetkov pri iskanju po ID -->
+% if prikazi == 'ni_id':
+    <h2>Za iskani ID "{{id}}" ni bilo najdenega nobenega igralca.</h2>
+    <p><a href="/igralec/id">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
@@ -56,7 +144,15 @@
         </li>
     % end
     </ul>
-    <p><a href="/igralec/meni">Nazaj</a></p>
+    <p><a href="/igralec/ime">Nazaj</a></p>
+    <p><a href="/">Nazaj na začetni meni</a></p>
+% end
+
+
+<!-- Ni zadetkov pri iskanju po imenu -->
+% if prikazi == 'ni_ime':
+    <h2>Za iskani niz "{{iskani_niz}}" ni bilo najdenega nobenega igralca.</h2>
+    <p><a href="/igralec/ime">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
@@ -74,7 +170,7 @@
             <li><strong>Porazi:</strong> {{ igralec.porazi }}</li>
             <li><strong>Goli:</strong> {{ igralec.goli }}</li>
             <li><strong>Asistence:</strong> {{ igralec.asistence }}</li>
-            <li><strong>Avtogoli:</strong> {{ igralec.avtogoli }}</li>
+            <li><strong>Avtogoli:</strong> {{ igralec.avto_goli }}</li>
         </ul>
         <p><a href="/igralec/id/{{ igralec.id }}/sezona">Prikaži statistiko po sezoni</a></p>
     % else:
@@ -100,7 +196,7 @@
             </select>
             <input type="submit" value="Prikaži statistiko">
         </div>        
-    
+
         <div id="meri" style="display:none; margin-top: 10px;">
             <label for="zacetek">Od:</label>
             <input type="date" name="zacetek" id="zacetek"><br>
@@ -116,7 +212,7 @@
         }
     </script>
     
-    <p><a href="/igralec/id">Nazaj</a></p>
+    <p><a href="/igralec/meni">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
@@ -134,7 +230,7 @@
         <li><strong>Porazi:</strong> {{ stat.porazi }}</li>
         <li><strong>Goli:</strong> {{ stat.goli }}</li>
         <li><strong>Asistence:</strong> {{ stat.asistence }}</li>
-        <li><strong>Avtogoli:</strong> {{ stat.avtogoli }}</li>
+        <li><strong>Avtogoli:</strong> {{ stat.avto_goli }}</li>
     </ul>
     <p><a href="/igralec/{{ stat.id }}/natančno">Natančnejši podatki o igralcu</a></p>
     <p><a href="/igralec/id/{{ stat.id }}">Nazaj</a></p>
@@ -149,8 +245,7 @@
     <ul>
     % for sezona, podatki in sezonski_SR.items():
         <li>
-            <strong>Sezona {{sezona}}</strong> —
-            MMR: {{podatki["mmr"]}}, Winstreak: {{podatki["winstreak"]}}, SR: {{podatki["sr"]}}
+            <strong>Sezona {{sezona}}</strong> — MMR: {{podatki["mmr"]}}, Winstreak: {{podatki["winstreak"]}}, SR: {{podatki["sr"]}}
         </li>
     % end
     </ul>
@@ -158,6 +253,6 @@
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
+</div>
 </body>
 </html>

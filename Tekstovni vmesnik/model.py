@@ -119,7 +119,6 @@ Winstreak: {self.winstreak}
         return self.id < other.id
     
 
-
     @staticmethod
     def razsirjena_statistika(self):
         '''Metoda igralcu izračuna MMR, winstreak in vse SR za izbrano obdobje.'''
@@ -142,11 +141,21 @@ Winstreak: {self.winstreak}
         sekunde = cas - minute * 60
         print(f"Opravljeno! Porabljen čas: {minute} min {sekunde} sec")
         return None
-    
+
+
     @staticmethod
-    def pridobi_statistiko(id, zacetek=PRVIC, konec = DANES):
+    def pridobi_statistiko(id, zacetek=PRVIC, konec=DANES):
         '''Metoda pridobi statistiko igralca z idejem id in vrne objekt oblike Igralec.'''
-        
+
+        # ime in priimek
+        poizvedba = """SELECT vzdevek FROM vzdevek WHERE igralec_id = ?"""
+        imena = conn.execute(poizvedba, [str(id)]).fetchall()
+        if len(imena) < 2:
+            return None  # igralec ne obstaja ali nima imena in priimka
+
+        ime = imena[0][0]
+        priimek = imena[1][0]
+
         # Prisotnost
         poizvedba = """SELECT COUNT(*) 
                     FROM prisotnost
@@ -154,57 +163,43 @@ Winstreak: {self.winstreak}
                     WHERE igralec_id = ? AND 
                     datum >= ? AND
                     datum <= ?"""
-        prisotnost = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0]
+        prisotnost = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0] or 0
 
-        # goli, asistence, avtogoli
+        # Goli, asistence, avtogoli
         poizvedba = """SELECT SUM(goli), SUM(asistence), SUM(avto_goli) 
                     FROM prisotnost 
                     JOIN tekma ON (tekma.id = prisotnost.tekma_id) 
-                    WHERE igralec_id = ? AND datum >= ? AND
-                    datum <= ?"""
+                    WHERE igralec_id = ? AND datum >= ? AND datum <= ?"""
         statistika = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()
-        goli = statistika[0]
-        asistence = statistika[1]
-        avtogoli = statistika[2]
+        goli = statistika[0] or 0
+        asistence = statistika[1] or 0
+        avtogoli = statistika[2] or 0
 
-        # zmage
+        # Zmage
         poizvedba = """SELECT COUNT(tekma.id)
                     FROM tekma
                     JOIN prisotnost ON (tekma.id = prisotnost.tekma_id)
                     WHERE prisotnost.igralec_id = ? AND 
                         ((tekma.goli_a > tekma.goli_b AND prisotnost.ekipa = 0) 
-                            OR 
+                        OR 
                         (tekma.goli_a < tekma.goli_b AND prisotnost.ekipa = 1))
-                        AND
-                        datum >= ? AND
-                        datum <= ?"""
-        zmage = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0]
+                        AND datum >= ? AND datum <= ?"""
+        zmage = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0] or 0
 
-        # porazi
+        # Porazi
         poizvedba = """SELECT COUNT(tekma.id)
                     FROM tekma
                     JOIN prisotnost ON (tekma.id = prisotnost.tekma_id)
                     WHERE prisotnost.igralec_id = ? AND 
                         ((tekma.goli_a < tekma.goli_b AND prisotnost.ekipa = 0) 
-                            OR 
+                        OR 
                         (tekma.goli_a > tekma.goli_b AND prisotnost.ekipa = 1))
-                        AND 
-                        datum >= ? AND
-                        datum <= ?"""
-        porazi = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0]
+                        AND datum >= ? AND datum <= ?"""
+        porazi = conn.execute(poizvedba, [str(id), zacetek, konec]).fetchone()[0] or 0
 
-        # ime in priimek
-        poizvedba = """SELECT vzdevek FROM vzdevek WHERE igralec_id = ?"""
-        try: 
-            ime = conn.execute(poizvedba, [str(id)]).fetchall()[0][0]
-            priimek = conn.execute(poizvedba, [str(id)]).fetchall()[1][0]
-        except Exception as e:
-            ime = ''
-            priimek = ''
+        return Igralec(id, ime, priimek, prisotnost, zmage, porazi, goli, asistence, avtogoli, zacetek, konec)
 
-        return Igralec(id, ime, priimek, prisotnost, zmage, porazi,  goli, asistence, avtogoli, zacetek, konec)
 
-    
     @staticmethod
     def najdi_igralca(ime):
         '''Metoda najde igralca, ki ga iščemo po imenu, priimku ali vzdevku in vrne objekt oblike Igralec z vsemi informacijami.'''
@@ -215,7 +210,7 @@ Winstreak: {self.winstreak}
             rezultat_iskanja.append(Igralec.pridobi_statistiko(igralec[0]))
         return rezultat_iskanja
 
-    
+
     @staticmethod
     def vsi_igralci(zacetek=PRVIC, konec=DANES):
         '''Metoda vrne slovar vseh igralcev v obliki razreda Igralec.'''
@@ -236,6 +231,7 @@ Winstreak: {self.winstreak}
         self.winrate = winrate 
         return None
     
+
     @staticmethod
     def nastavi_lossrate(self):
         '''Nastavi lossrate igralca.'''
@@ -246,6 +242,7 @@ Winstreak: {self.winstreak}
         self.lossrate = lossrate 
         return None
     
+
     @staticmethod
     def nastavi_tierate(self):
         '''Nastavi tierate igralca.'''
@@ -256,6 +253,7 @@ Winstreak: {self.winstreak}
         self.tierate = tierate 
         return None
     
+
     @staticmethod
     def nastavi_mmr(self):
         '''Nastavi MMR igralca.'''
@@ -263,37 +261,6 @@ Winstreak: {self.winstreak}
         self.mmr = MMR(self)
         return None
     
-    # napaka Index out of range
-
-    # @staticmethod
-    # def nastavi_winstreak(self):
-    #     '''Nastavi winstreak igralca.'''
-        
-    #     tekme = Tekma.tekme_igralca(self.id, self.zacetek, self.konec)
-    #     st_tekem = len(tekme)
-    #     winstreak = 0
-
-    #     if st_tekem == 0:
-    #         self.winstreak = 0
-    #         return None
-        
-    #     tekma = tekme[st_tekem-1]
-
-    #     if st_tekem == 1:
-    #         if Tekma.zmagovalec_tekme(tekma.id, self.id):
-    #             self.winstreak = 1
-    #         else:
-    #             winstreak = 0
-    #         return None
-        
-    #     i = 1
-    #     while Tekma.zmagovalec_tekme(tekma.id, self.id):
-    #         winstreak +=1
-    #         tekma = tekme[st_tekem-1-i]
-    #         i+=1
-        
-    #     self.winstreak = winstreak
-    #     return None
 
     @staticmethod
     def nastavi_winstreak(self):
@@ -354,11 +321,13 @@ Winstreak: {self.winstreak}
         else:
             return None
         
+
     @staticmethod
     def nastavi_sr(self):
         self.sr = [SR(self.konec)[self.id]]
         return None
     
+
 
 class Tekma:
 
@@ -413,11 +382,13 @@ Ekipa B: {self.ekipa_1}
                         WHERE datum = ? AND prisotnost.ekipa = ?"""
             rezultat = conn.execute(poizvedba, [datum, ekipa_id]).fetchall()
             for igralec in rezultat:
-                ekipi[ekipa_id].append(Igralec.pridobi_statistiko(igralec[0], datum, datum))
+                igralec_objekt = Igralec.pridobi_statistiko(igralec[0], datum, datum)
+                if igralec_objekt is not None:
+                    ekipi[ekipa_id].append(igralec_objekt)
         
-
         return Tekma(id_tekme, datum, goli_A, goli_B, ekipi[0], ekipi[1])
     
+
     @staticmethod
     def najdi_tekmo_id(id):
         '''Metoda najde in vrne tekmo v obliki objekta Tekma, ki ima ID id.'''
@@ -443,11 +414,13 @@ Ekipa B: {self.ekipa_1}
                         WHERE tekma.id = ? AND prisotnost.ekipa = ?"""
             rezultat = conn.execute(poizvedba, [id, ekipa_id]).fetchall()
             for igralec in rezultat:
-                ekipi[ekipa_id].append(Igralec.pridobi_statistiko(igralec[0], datum, datum))
-        
+                igralec_objekt = Igralec.pridobi_statistiko(igralec[0], datum, datum)
+                if igralec_objekt is not None:
+                    ekipi[ekipa_id].append(igralec_objekt)
 
         return Tekma(id, datum, goli_A, goli_B, ekipi[0], ekipi[1])
     
+
     @staticmethod
     def vse_tekme(zacetek=PRVIC, konec=DANES):
         '''Metoda vrne slovar objektov vseh tekem v določenem časovnem obdobju.'''
@@ -460,11 +433,13 @@ Ekipa B: {self.ekipa_1}
             tekme.append(Tekma.najdi_tekmo_id(i[0]))
         return tekme
     
+
     @staticmethod
     def eno_vrsticni_izpis(tekma):
         '''Metoda v eni vrstici na krato izpiše podatke o tekmi.'''
         return f"Tekma id: {tekma.id}; datum: {tekma.datum} --> A:B = {tekma.goli_ekipa_0}:{tekma.goli_ekipa_1}"
     
+
     @staticmethod
     def tekme_igralca(id=0, zacetek = PRVIC, konec = DANES):
         '''Metoda vrne seznam tekem, na katerih je igral igralec z ID-jem id v izbranem časovnem obdobju.'''
@@ -483,6 +458,7 @@ Ekipa B: {self.ekipa_1}
             tekme.append(Tekma.najdi_tekmo_id(i[0]))
         return tekme
 
+
     @staticmethod
     def prisotni_id(tekma):
         '''Vrne seznam ID-jev prisotnih igralcev na tekmi.'''
@@ -492,6 +468,7 @@ Ekipa B: {self.ekipa_1}
             prisotni_id.append(igralec.id)
         return prisotni_id
     
+
     @staticmethod
     def prisotni_id_po_ekipah(tekma):
         '''Vrne seznam ID-jev prisotnih igralcev na tekmi.'''
@@ -505,6 +482,7 @@ Ekipa B: {self.ekipa_1}
         for igralec in prisotni:
             prisotni_id_1.append(igralec.id)
         return prisotni_id_0, prisotni_id_1
+
 
     @staticmethod
     def zmagovalec(tekma):
@@ -540,6 +518,7 @@ Ekipa B: {self.ekipa_1}
 
         return (igralec_id in zmagovalec)
 
+
     @staticmethod
     def mvp(tekma):
         '''Vrne par igralcev ( G , A ), kjer igralec G najboljši strelec tekme in A najboljši podajalec tekme.'''
@@ -550,6 +529,7 @@ Ekipa B: {self.ekipa_1}
         mvp_asistence = Igralec.naj_podajalec(prisotni)
         return mvp_goli, mvp_asistence
         
+
     @staticmethod
     def izpisi_tekmo_dodatno(tekma):
         izpis = ""
@@ -569,18 +549,23 @@ Ekipa B: {self.ekipa_1}
         for ekipa in [ekipa0, ekipa1]:
             i = 0
             while i < len(tabela):
-                try: 
+                if i < len(ekipa):
                     igralec = ekipa[i]
-                except:
-                    igralec = Igralec.pridobi_statistiko(0, tekma.datum, tekma.datum)
+                else:
+                    igralec = None
+
+                if igralec is None:
+                    i += 1
+                    continue
+
                 ime_priimek = f"{igralec.ime} {igralec.priimek}"
                 dolzina_ime = len(ime_priimek)
                 tabela[i] += (" " + ime_priimek + " " * (19 - dolzina_ime))
-                tabela[i] +=  ("|" + " " * len(str(igralec.goli)) + (str(igralec.goli))) 
-                tabela[i] += ("|" + " " * len(str(igralec.asistence)) + (str(igralec.asistence))) 
-                tabela[i] += ("|" + " " * len(str(igralec.avto_goli)) + (str(igralec.avto_goli)))
-                tabela[i] += ("|" * j + "\n" * (abs(j-1)))
-                i+=1
+                tabela[i] += ("|" + " " * len(str(igralec.goli)) + str(igralec.goli)) 
+                tabela[i] += ("|" + " " * len(str(igralec.asistence)) + str(igralec.asistence)) 
+                tabela[i] += ("|" + " " * len(str(igralec.avto_goli)) + str(igralec.avto_goli))
+                tabela[i] += ("|" * j + "\n" * (abs(j - 1)))
+                i += 1
             j-=1
 
         for vrstica in tabela:
@@ -593,12 +578,13 @@ Ekipa B: {self.ekipa_1}
         izpis += "\n"
         return izpis
     
-    ###########################
+    
     @staticmethod
     def get_all():
         poizvedba = "SELECT * FROM tekma"
         return conn.execute(poizvedba).fetchall()
     
+
     @staticmethod
     def get_splosne_lestvice():
         '''Vrne splošne lestvice na podlagi vseh tekem.'''
@@ -611,6 +597,7 @@ Ekipa B: {self.ekipa_1}
         """
         return conn.execute(poizvedba).fetchall()
     
+
     @staticmethod
     def get_lestvice_obdobje(zacetek, konec):
         '''Vrne lestvice za določeno obdobje.'''
@@ -624,7 +611,8 @@ Ekipa B: {self.ekipa_1}
         ORDER BY goli DESC
         """
         return conn.execute(poizvedba, (zacetek, konec)).fetchall()
-    ###########################
+
+
 
 class Sezona:
 
@@ -666,7 +654,6 @@ Seznam tekem:
             return izpis
 
 
-
     @staticmethod
     def sezona_zacetek(sezona):
         '''Metoda vrne zacetek sezone.'''
@@ -685,6 +672,7 @@ Seznam tekem:
         rezultat = conn.execute(poizvedba, [sezona]).fetchall()
         return rezultat[0][0]
 
+
     @staticmethod
     def vse_sezone(zacetek = PRVIC, konec = "2099-12-31"):
         '''Metoda vrne slovar objektov vseh sezon.'''
@@ -693,13 +681,13 @@ Seznam tekem:
                     FROM sezona
                     WHERE zacetek >= ? AND konec <= ?"""
         rezultat = conn.execute(poizvedba, [zacetek, konec]).fetchall()
-        # print(rezultat)
         for i in rezultat:
             zacetek = Sezona.sezona_zacetek(i[0])
             konec = Sezona.sezona_konec(i[0])
             sezone[i[0]] = Sezona(i[0], zacetek, konec)
         return sezone
     
+
     @staticmethod
     def najdi_sezono(datum):
         '''Metoda prejme datum in vrne sezono, v katero datum spada.'''
@@ -710,13 +698,14 @@ Seznam tekem:
         i = min(i, len(sezone))
         return sezone[i]
 
+
     @staticmethod
     def pridobi_podatke(self):
         '''Metoda izračuna osnovne podatke o sezoni (tekme, goli, asistence, avtogoli).'''
         poizvedba = """SELECT COUNT(DISTINCT tekma_id), SUM(goli), SUM(asistence), SUM(avto_goli) 
                     FROM prisotnost
                     JOIN tekma ON (tekma.id = prisotnost.tekma_id)
-                    WHERE tekma.datum > ? AND tekma.datum < ?"""
+                    WHERE tekma.datum >= ? AND tekma.datum <= ?"""
         rezultat = conn.execute(poizvedba, [self.zacetek, self.konec]).fetchall()
         self.tekme = rezultat[0][0]
         self.goli = rezultat[0][1]
@@ -724,12 +713,11 @@ Seznam tekem:
         self.avto_goli = rezultat[0][3]
         return None
     
-    ###########################
+
     @staticmethod
     def get_all():
         poizvedba = "SELECT * FROM sezona"
         return conn.execute(poizvedba).fetchall()
-    ###########################
 
 
 
@@ -750,7 +738,6 @@ def winrate_kalkulator(igralec):
         winrate = 0
     return winrate
 
-
 def MMR(igralec):
     '''Prejme igralca in zanj izračuna njegov MMR (match-making-rating).'''
     igralec.nastavi_winrate(igralec)
@@ -759,7 +746,6 @@ def MMR(igralec):
     asistencerate = igralec.asistencerate
     avtogolirate = igralec.avtogolirate
     return MMR_kalkulator(winrate, golirate, asistencerate, avtogolirate)
-
 
 def SR_kalkulator(trenutni, rezultat_prejsne_tekme, goli, asistence, avtogoli, winstreak, mvpg, mvpa, soigralci, nasprotniki, slovar_SR):
     '''Vrne seasonal rating igralca pri danih podatkih.'''
@@ -780,7 +766,6 @@ def SR_kalkulator(trenutni, rezultat_prejsne_tekme, goli, asistence, avtogoli, w
         SR_nasprotniki = sum(nasprotniki)
         SR_nasprotniki_povp = SR_nasprotniki / len(nasprotniki)
 
-    
     if (mvpa & mvpg):
         k = 25
     elif (mvpa | mvpg):
@@ -862,7 +847,6 @@ def nov_SR(datum, zbirka_SR):
     zbirka_zbirk_SR[datum] = zbirka_SR
     return zbirka_SR
 
-
 def SR(datum):
     '''Izračuna SR igralca z ID-jem igralec_id na datum datum. Za tekme proti koncu sezone lahko traja nekaj dalj časa.'''
     if datum in zbirka_zbirk_SR:
@@ -892,6 +876,8 @@ def SR(datum):
     
     return zbirka_SR
 
+
+
 class Lestvica:
 
     def __init__(self, kategorija="", datum="", stevilo=0, vsebina=[], zacetek = "", konec=""):
@@ -900,16 +886,13 @@ class Lestvica:
         self.vsebina = vsebina
         self.datum = datum
         self.zacetek = zacetek
-        ###########################
         self.konec = konec
-        ###########################
 
     def __repr__(self):
         if self.stevilo == 0:
             return f"Lestvica najboljših v kategoriji: {self.kategorija} za obdobje: {self.zacetek} - {self.datum}."
         else:
             return f"Lestvica najboljših {self.stevilo} v kategoriji: {self.kategorija} za obdobje: {self.zacetek} - {self.datum}."
-
 
     def __str__(self):
         if self.stevilo == 0:
@@ -959,7 +942,8 @@ class Lestvica:
             jedro += vrstica
             i+=1
         return uvod + premor + jedro + premor
-                               
+
+
     @staticmethod
     def prevajalnik(kategorija):
         '''Metoda prejme kateogirjo in ji priredi ime, ki se ujema v SQL-ju.'''
@@ -998,7 +982,7 @@ class Lestvica:
         else:
             return kategorija
         
-    ###############
+
     @staticmethod
     def prevedi_kategorijo(kategorija):
         slovar = {
@@ -1019,7 +1003,6 @@ class Lestvica:
             "SR": "sr"
         }
         return slovar.get(kategorija, kategorija)
-    ###############
 
 
     @staticmethod
@@ -1048,10 +1031,11 @@ class Lestvica:
             rezultat = conn.execute(poizvedba, [datum, zacetek, stevilo]).fetchall()
         for i in rezultat:
             igralec = Igralec.pridobi_statistiko(i[0], PRVIC, datum)
-            if igralec.ime != "":
+            if igralec is not None and igralec.ime != "":
                 vsebina.append(igralec)
         return Lestvica(kategorija, datum, stevilo, vsebina, PRVIC)
     
+
     @staticmethod
     def pridobi_lestvico_prisotnost(datum, stevilo=0,  zacetek = PRVIC):
         '''Metoda vrne lestvice velikosti stevilo za kategorijo prisotnost.'''
@@ -1078,18 +1062,20 @@ class Lestvica:
             rezultat = conn.execute(poizvedba, [datum, zacetek, stevilo]).fetchall()
         for i in rezultat:
             igralec = Igralec.pridobi_statistiko(i[0], zacetek, datum)
-            if igralec.ime != "":
+            if igralec is not None and igralec.ime != "":
                 vsebina.append(igralec)
         return Lestvica("Prisotnost", datum, stevilo, vsebina, PRVIC)
     
+
     @staticmethod
     def pridobi_lestvico_razno(kategorija, datum, stevilo=0,  zacetek = PRVIC):
         '''Vrne lestvico najboljsih (stevilo) za kategorijo zmage / porazi / neodlocene / MMR / winrate / winstreak.'''
         igralci = Igralec.vsi_igralci(zacetek, datum)
         prazni = []
-        for igralec_id in igralci:
-            if igralci[igralec_id].ime == "":
+        for igralec_id, igralec in igralci.items():
+            if igralec is None or igralec.ime == "":
                 prazni.append(igralec_id)
+
         for igralec_id in prazni:
             del igralci[igralec_id]
 
@@ -1113,45 +1099,28 @@ class Lestvica:
 
         return Lestvica(kategorija, datum, stevilo, vsebina, PRVIC)
     
+
     @staticmethod
     def pridobi_lestvico_SR(datum, stevilo=0,  zacetek = PRVIC):
         '''Vrne lestvico najboljsih (stevilo) za kategorijo zmage / porazi / neodlocene / MMR / winrate / winstreak.'''
-
         zbirka_SR = SR(datum)
-       
         seznam_igralcev = []
         seznam_igralcev_id = [k for k, v in sorted(zbirka_SR.items(), key=lambda item: item[1], reverse=True)]
-
-        i=0
         for igralec_id in seznam_igralcev_id:
-            seznam_igralcev.append(Igralec.pridobi_statistiko(igralec_id, zacetek, datum))
-            if zbirka_SR[igralec_id] != 1000:
-                seznam_igralcev[i].sr = [zbirka_SR[igralec_id]]
-            i+=1
-
-
+            igralec = Igralec.pridobi_statistiko(igralec_id, zacetek, datum)
+            if igralec is not None:
+                if zbirka_SR[igralec_id] != 1000:
+                    igralec.sr = [zbirka_SR[igralec_id]]
+                if igralec.ime != "":
+                    seznam_igralcev.append(igralec)
         if stevilo == 0:
             vsebina = seznam_igralcev
         else:
             vsebina = seznam_igralcev[:stevilo]
-        
-        koncni = []
-
-        for i in range(len(vsebina)):
-            if vsebina[i].ime != "":
-                koncni.append(vsebina[i])
-
-        return Lestvica("SR", datum, stevilo, koncni, PRVIC)
+        return Lestvica("SR", datum, stevilo, vsebina, zacetek, datum)
     
-    ###########################
+ 
     @staticmethod
     def get_all():
         poizvedba = "SELECT * FROM lestvice"
         return conn.execute(poizvedba).fetchall()
-    ###########################
-
-# l = Lestvica.pridobi_lestvico_prisotnost("2029-02-21") 
-# print(l)
-# 
-# t = Lestvica.pridobi_lestvico_SR("2024-02-01", 0, "2022-09-01")
-# print(t)
