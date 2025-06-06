@@ -15,7 +15,6 @@ def meni_igralec():
     '''Vrne začetni meni za igralce.'''
     return bottle.template("meni_igralec", prikazi="meni")
 
-
 @bottle.route('/igralec/id')
 def igralec_id():
     '''Vrne obrazec za iskanje igralca po ID.'''
@@ -24,8 +23,11 @@ def igralec_id():
 @bottle.route('/igralec/id/<id:int>')
 def igralec_po_id(id):
     '''Preusmeri na izbiro obdobja za podatke o igralcu.'''
-    return bottle.redirect(f'/igralec/{id}/obdobje')
+    igralec = Igralec.pridobi_statistiko(id)
+    if not igralec:
+        return bottle.template("meni_igralec", prikazi="ni_id", id=id)
 
+    return bottle.redirect(f'/igralec/{id}/obdobje')
 
 @bottle.route('/igralec/ime')
 def igralec_ime():
@@ -36,16 +38,18 @@ def igralec_ime():
 def iskanje_po_imenu():
     '''Vrne rezultate iskanja igralca po imenu.'''
     niz = bottle.request.forms.get('ime')
-    igralci = Igralec.najdi_igralca(niz)
+    vsi_igralci = Igralec.najdi_igralca(niz)
+
+    # filtriramo le pravilne objekte
+    igralci = [i for i in vsi_igralci if hasattr(i, 'id') and hasattr(i, 'ime') and hasattr(i, 'priimek')]
 
     if not igralci:
-        return bottle.template("napaka", sporocilo="Ni zadetkov za vnešeno ime."), 404
+        return bottle.template("meni_igralec", prikazi="ni_ime", iskani_niz=niz)
 
     if len(igralci) == 1:
-        return bottle.redirect(f"/igralec/id/{igralci[0].id}/sezona")
+        return bottle.redirect(f"/igralec/{igralci[0].id}/obdobje")
 
     return bottle.template("meni_igralec", prikazi="rezultati_iskanja", igralci=igralci)
-
 
 @bottle.route("/igralec/<id:int>/obdobje")
 def izberi_obdobje(id):
@@ -60,7 +64,9 @@ def prikazi_statistiko(id):
     izbira = bottle.request.forms.get("izbira")
 
     if izbira == "7":
-        stat = Igralec.pridobi_statistiko(id)
+        zacetek = PRVIC
+        konec = DANES
+        stat = Igralec.pridobi_statistiko(id, zacetek, konec)
     elif izbira == "8":
         zacetek = bottle.request.forms.get("zacetek")
         konec = bottle.request.forms.get("konec")
@@ -71,19 +77,30 @@ def prikazi_statistiko(id):
         konec = Sezona.sezona_konec(sezona)
         stat = Igralec.pridobi_statistiko(id, zacetek, konec)
 
-    igralec = Igralec.najdi_igralca(id)
+    stat = Igralec.pridobi_statistiko(id, zacetek, konec)
     return bottle.template("meni_igralec", prikazi="statistika", stat=stat)
 
 @bottle.route('/igralec/<id:int>/natančno')
 def prikazi_natancno(id):
     '''Vrne natančnejše podatke o igralcu.'''
-    igralec = Igralec.najdi_igralca(id)
+    igralec = Igralec.pridobi_statistiko(id)
     if not igralec:
         return bottle.template("napaka", sporocilo="Igralec ne obstaja."), 404
 
-    sezonski_SR = Igralec.natančna_statistika(id)
-    return bottle.template("meni_igralec", prikazi="natančno", igralec=igralec, sezonski_SR=sezonski_SR)
+    # Izračunaj razširjeno statistiko (MMR, winstreak, SR po sezonah)
+    igralec.razsirjena_statistika(igralec)
 
+    # Pripravi slovar podatkov za prikaz v predlogi
+    sezonski_SR = {}
+    vse_sezone = Sezona.vse_sezone(igralec.zacetek, igralec.konec)
+    for i, sezona in enumerate(vse_sezone):
+        sezonski_SR[sezona] = {
+            "mmr": round(igralec.mmr),
+            "winstreak": igralec.winstreak,
+            "sr": round(igralec.sr[i][1]) if i < len(igralec.sr) else "-"
+        }
+
+    return bottle.template("meni_igralec", prikazi="natančno", igralec=igralec, sezonski_SR=sezonski_SR)
 
 
 # Meni tekme =========================================================================================================================
@@ -91,7 +108,6 @@ def prikazi_natancno(id):
 def meni_tekme():
     '''Vrne začetni meni za tekme.'''
     return bottle.template("meni_tekme", prikazi="meni")
-
 
 @bottle.route('/tekma/id')
 def tekma_id():
@@ -122,29 +138,28 @@ def najdi_tekmo_po_id(id):
     ekipa_b = []
 
     for id_igralca, ime, priimek, ekipa in rezultat:
-        opis = f"ID:{id_igralca} > {ime} {priimek}"
+        opis = f"ID:{str(id_igralca)} > {ime} {priimek}"
         if ekipa == 0:
             ekipa_a.append(opis)
         else:
             ekipa_b.append(opis)
 
     return {
-        "id": id_tekme,
-        "goli_a": goli_a,
-        "goli_b": goli_b,
-        "datum": datum,
+        "id": str(id_tekme),
+        "goli_a": str(goli_a),
+        "goli_b": str(goli_b),
+        "datum": str(datum),
         "ekipa_a": ekipa_a,
         "ekipa_b": ekipa_b,
     }
 
 @bottle.route('/tekma/id/<id:int>')
 def tekma_po_id(id):
-    '''Vrne stran s podatki o tekmi z danim ID-jem.'''
+    '''Vrne stran s podatki o tekmi z danim ID-jem. Če je ni, pokaže uporabniku prijazno sporočilo.'''
     tekma = najdi_tekmo_po_id(id)
-    if tekma:
-        return bottle.template("meni_tekme", prikazi="id", tekma=tekma)
-    else:
-        return bottle.template("napaka", sporocilo="Tekma s tem ID-jem ne obstaja."), 404
+    if tekma is None:
+        return bottle.template("meni_tekme", prikazi="ni_id", iskani_id=id)
+    return bottle.template("meni_tekme", prikazi="id", tekma=tekma)
 
 @bottle.route('/tekma/<id:int>/natančno')
 def natancno_tekma(id):
@@ -162,7 +177,6 @@ def izberi_moznost_za_tekmo(id):
     if tekma is None:
         return bottle.template("napaka", sporocilo="Tekma s tem ID-jem ne obstaja.")
     return bottle.template("meni_tekme", prikazi="moznosti", tekma=tekma)
-
 
 @bottle.route('/tekma/datum')
 def tekma_datum():
@@ -186,7 +200,6 @@ def tekma_datum():
             return bottle.template("meni_tekme", prikazi="datum", tekme=[], datum=datum)
     return bottle.template("meni_tekme", prikazi="datum", tekme=None, datum=None)
 
-
 @bottle.route('/tekma/obdobje')
 def tekma_obdobje():
     '''Vrne obrazec za izbiro obdobja tekem.'''
@@ -204,9 +217,7 @@ def najdi_tekme_po_obdobju(zacetek, konec):
     '''Vrne vse tekme znotraj danega obdobja.'''
     poizvedba = "SELECT id, goli_a, goli_b, datum FROM tekma WHERE datum BETWEEN ? AND ?"
     rezultat = conn.execute(poizvedba, (zacetek, konec)).fetchall()
-    if rezultat:
-        return [{"id": row[0], "goli_a": row[1], "goli_b": row[2], "datum": row[3]} for row in rezultat]
-    return None
+    return [{"id": row[0], "goli_a": row[1], "goli_b": row[2], "datum": row[3]} for row in rezultat]  # tudi če je prazno
 
 @bottle.route('/tekma/obdobje/<zacetek>/<konec>')
 def tekma_po_obdobju(zacetek, konec):
@@ -366,8 +377,7 @@ def prikazi_splosno_lestvico(kategorija):
         prava_kategorija = Lestvica.prevedi_kategorijo(kategorija)
         lestvica = Lestvica.pridobi_lestvico_razno(prava_kategorija, konec, stevilo, zacetek)
 
-    return bottle.template("meni_lestvice", prikazi="ena_lestvica", kategorija=kategorija, lestvica=lestvica.vsebina, atribut=lestvica.kategorija)
-
+    return bottle.template("meni_lestvice", prikazi="ena_lestvica", kategorija=kategorija, lestvica=lestvica.vsebina, atribut=Lestvica.prevedi_kategorijo(kategorija))
 
 @bottle.route('/lestvice/obdobje')
 def lestvice_obdobje_obrazec():
@@ -425,6 +435,10 @@ def obdelaj_obdobje_izbiro_lestvice():
 @bottle.route("/lestvice/obdobje/<zacetek>/<konec>/seznam")
 def izberi_kategorijo_lestvice(zacetek, konec):
     '''Vrne seznam kategorij za prikaz lestvice po obdobju.'''
+    if zacetek == "0000-01-01" and konec == "9999-12-31":
+        zacetek = PRVIC
+        konec = DANES
+
     kategorije = [
         "Prisotnost", "Zmage", "Porazi", "Neodločenosti", "Goli",
         "Asistence", "Avtogoli", "MMR", "Winrate", "Lossrate",
@@ -437,6 +451,10 @@ def prikazi_lestvico_po_obdobju_in_kategoriji(zacetek, konec, kategorija):
     '''Vrne lestvico za izbrano kategorijo in obdobje.'''
     stevilo = 0
 
+    if zacetek == "0000-01-01" and konec == "9999-12-31":
+        zacetek = PRVIC
+        konec = DANES
+
     if kategorija == "Prisotnost":
         lestvica = Lestvica.pridobi_lestvico_prisotnost(konec, stevilo, zacetek)
     elif kategorija in ["Goli", "Asistence", "Avtogoli"]:
@@ -447,7 +465,7 @@ def prikazi_lestvico_po_obdobju_in_kategoriji(zacetek, konec, kategorija):
         prava = Lestvica.prevedi_kategorijo(kategorija)
         lestvica = Lestvica.pridobi_lestvico_razno(prava, konec, stevilo, zacetek)
 
-    return bottle.template("meni_lestvice", prikazi="ena_lestvica", kategorija=kategorija, lestvica=lestvica.vsebina, atribut=lestvica.kategorija)
+    return bottle.template("meni_lestvice", prikazi="ena_lestvica", kategorija=kategorija, lestvica=lestvica.vsebina, atribut=Lestvica.prevedi_kategorijo(kategorija))
 
 
 # Zagon strežnika ====================================================================================================================

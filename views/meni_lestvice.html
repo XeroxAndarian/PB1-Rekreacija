@@ -5,9 +5,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meni lestvice</title>
-</head>
-<body>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9f5;
+            margin: 0;
+            padding: 20px;
+        }
 
+        h1, h2 {
+            color: #2e7d32;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            background-color: #e8f5e9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-left: 5px solid #43a047;
+        }
+
+        ul.lestvica li {
+            font-family: monospace;
+        }
+
+        a {
+            color: #1b5e20;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-width: 500px;
+        }
+
+        label {
+            display: inline-block;
+            width: 140px;
+            margin-bottom: 5px;
+        }
+
+        input[type="date"],
+        select {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: calc(100% - 150px);
+        }
+
+        input[type="submit"] {
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #2e7d32;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        p {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
 
 <!-- Meni lestvice -->
 % if prikazi == 'meni':
@@ -18,7 +99,6 @@
     </ul>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Splošne lestvice -->
 % if prikazi == 'seznam_kategorij':
@@ -33,22 +113,21 @@
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
 <!-- Prikaz izbrane lestvice -->
 % if prikazi == 'ena_lestvica':
     <h1>{{kategorija}}</h1>
     <p>Statistika za kategorijo: {{kategorija}}</p>
-    <ol>
-    % for igralec in lestvica:
+    <ul class="lestvica">
+    % for i, igralec in enumerate(lestvica, start=1):
         % vrednost = getattr(igralec, atribut.lower(), None)
         <li>
-            {{igralec.ime}} {{igralec.priimek}} – 
+            <strong>{{i}}.</strong> {{igralec.ime}} {{igralec.priimek}} –
             % if kategorija == "MMR":
                 {{int(round(vrednost)) if vrednost is not None else ''}}
             % elif kategorija in ["Winrate", "Lossrate", "Tierate", "Goalrate", "Assistencerate", "AGrate"]:
                 {{'%.2f' % vrednost if vrednost is not None else ''}}
             % elif kategorija == "SR":
-                % if vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (tuple, list)):
+                % if vrednost and isinstance(vrednost[0], (tuple, list)):
                     {{'%.0f' % vrednost[0][0]}}
                 % elif vrednost and isinstance(vrednost[0], (int, float)):
                     {{'%.0f' % vrednost[0]}}
@@ -60,11 +139,10 @@
             % end
         </li>
     % end
-    </ol>
-    <p><a href="/lestvice/splosne">Nazaj</a></p>
+    </ul>
+    <p><a href="/lestvice">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Lestvice za izbrano obdobje -->
 % if prikazi == 'obdobje':
@@ -102,7 +180,6 @@
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
 <!-- Izbira kategorije po obdobju -->
 % if prikazi == 'seznam_kategorij_obdobje':
     <h1>Lestvice</h1>
@@ -116,7 +193,6 @@
     <p><a href="/lestvice/obdobje">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
-
 
 <!-- Prikaz lestvic po obdobju -->
 % if prikazi == 'rezultati':
@@ -132,17 +208,17 @@
 
     % for kategorija, obj in lestvice.items():
         <h2>{{kategorija}}</h2>
-        <ol>
-        % for igralec in obj.vsebina:
-        <li>{{igralec.ime}} {{igralec.priimek}} – {{getattr(igralec, obj.kategorija.lower(), '')}}</li>
+        <ul class="lestvica">
+        % for i, igralec in enumerate(obj.vsebina, start=1):
+            <li><strong>{{i}}.</strong> {{igralec.ime}} {{igralec.priimek}} – {{getattr(igralec, obj.kategorija.lower(), '')}}</li>
         % end
-        </ol>
+        </ul>
     % end
 
     <p><a href="/lestvice">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
+</div>
 </body>
 </html>

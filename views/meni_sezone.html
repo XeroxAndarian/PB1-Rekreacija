@@ -5,22 +5,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Podatki o sezonah</title>
-</head>
-<body>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9f5;
+            margin: 0;
+            padding: 20px;
+        }
 
+        h1, h2 {
+            color: #2e7d32;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            background-color: #e8f5e9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-left: 5px solid #43a047;
+        }
+
+        ul.lestvica li {
+            font-family: monospace;
+        }
+
+        a {
+            color: #1b5e20;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin-top: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
 
 <!-- Izberi sezono -->
 % if prikazi == 'izberi':
     <h1>Izberite sezono, ki vas zanima</h1>
-
     <ul>
     % for sez in sezone:
-        <li> 
-            <a href="/sezona/{{sez['id']}}">Sezona {{ sez["id"] }} [{{ sez["zacetek"] }} - {{ sez["konec"] }}]</a>
-        </li>
+        <li><a href="/sezona/{{sez['id']}}">Sezona {{ sez["id"] }} [{{ sez["zacetek"] }} - {{ sez["konec"] }}]</a></li>
     % end
     </ul>
-    
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
@@ -32,7 +75,6 @@
         <li><a href="/sezona/{{sezona_id}}/splosni">Splošni podatki</a></li>
         <li><a href="/sezona/{{sezona_id}}/lestvice">Lestvice</a></li>
     </ul>
-
     <p><a href="/sezone">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
@@ -78,34 +120,33 @@
 % if prikazi == 'ena_lestvica':
     <h1>Lestvica: {{kategorija}}</h1>
     <p>Obdobje: od {{zacetek}} do {{konec}}</p>
-    <ul>
+    <ul class="lestvica">
     % for vrstica in lestvica:
-    <li>
-        {{vrstica.ime}} {{vrstica.priimek}} – 
-        % vrednost = getattr(vrstica, atribut)
-        % if kategorija == "MMR":
-            {{int(round(vrednost))}}
-        % elif kategorija in ["Winrate", "Lossrate", "Tierate", "Goalrate", "Assistencerate", "AGrate"]:
-            {{'%.2f' % vrednost}}
-        % elif kategorija == "SR":
-            % if vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (tuple, list)):
-                {{'%.0f' % vrednost[0][0]}}
-            % elif vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (int, float)):
-                {{'%.0f' % vrednost[0]}}
+        <li>
+            {{vrstica.ime}} {{vrstica.priimek}} – 
+            % vrednost = getattr(vrstica, atribut)
+            % if kategorija == "MMR":
+                {{int(round(vrednost))}}
+            % elif kategorija in ["Winrate", "Lossrate", "Tierate", "Goalrate", "Assistencerate", "AGrate"]:
+                {{'%.2f' % vrednost}}
+            % elif kategorija == "SR":
+                % if vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (tuple, list)):
+                    {{'%.0f' % vrednost[0][0]}}
+                % elif vrednost and isinstance(vrednost, list) and isinstance(vrednost[0], (int, float)):
+                    {{'%.0f' % vrednost[0]}}
+                % else:
+                    1010
+                % end
             % else:
-                1010
+                {{vrednost}}
             % end
-        % else:
-            {{vrednost}}
-        % end
-    </li>    
-    
+        </li>    
     % end
     </ul>
     <p><a href="/sezona/{{id}}/lestvice">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
 
-
+</div>
 </body>
 </html>

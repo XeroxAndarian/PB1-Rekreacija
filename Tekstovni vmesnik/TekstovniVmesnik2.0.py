@@ -281,7 +281,7 @@ def meni_igralec():
 
     izpis = meni("Izberi način iskanja", 
                 ["Iskanje po ID", 
-                 "Iskanje po imeu / priimku / vzdevku"
+                 "Iskanje po imenu / priimku / vzdevku"
                  ], False)
 
     print(izpis)
