@@ -82,6 +82,17 @@
             max-width: 800px;
             margin: auto;
         }
+
+        #loadingMessage {
+            display: none;
+            font-weight: bold;
+            color: #1b5e20;
+            margin-bottom: 15px;
+        }
+
+        body.waiting {
+            cursor: wait;
+        }
     </style>
 </head>
 <body>
@@ -232,7 +243,8 @@
         <li><strong>Asistence:</strong> {{ stat.asistence }}</li>
         <li><strong>Avtogoli:</strong> {{ stat.avto_goli }}</li>
     </ul>
-    <p><a href="/igralec/{{ stat.id }}/natančno">Natančnejši podatki o igralcu</a></p>
+    <p><a href="/igralec/{{ stat.id }}/natančno" id="natančnoPovezava">Natančnejši podatki o igralcu</a></p>
+    <div id="loadingMessage">RAČUNAM... To lahko traja nekaj minut!</div>
     <p><a href="/igralec/id/{{ stat.id }}">Nazaj</a></p>
     <p><a href="/">Nazaj na začetni meni</a></p>
 % end
@@ -254,5 +266,18 @@
 % end
 
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const link = document.getElementById("natančnoPovezava");
+    if (link) {
+      link.addEventListener("click", function () {
+        document.getElementById("loadingMessage").style.display = "block";
+        document.body.classList.add("waiting");
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
