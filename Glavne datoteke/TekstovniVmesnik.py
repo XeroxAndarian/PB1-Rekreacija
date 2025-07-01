@@ -153,14 +153,8 @@ def meni(uvodni_stavek , seznam_izbir, nazaj=True, na_osnovni=True):
 
     return izpis
 
-def praznina():
-    while True:
-        pass
-    return None
-
 def izhod():
     print("Do prihodnjič!")
-    praznina()
     return None
 
 def opozorilo_cakanje(prihod):
