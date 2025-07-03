@@ -155,7 +155,7 @@ def najdi_tekmo_po_id(id):
 
 @bottle.route('/tekma/id/<id:int>')
 def tekma_po_id(id):
-    '''Vrne stran s podatki o tekmi z danim ID-jem. Če je ni, pokaže uporabniku prijazno sporočilo.'''
+    '''Vrne stran s podatki o tekmi z danim ID-jem. Če je ni, pokaže uporabniku sporočilo.'''
     tekma = najdi_tekmo_po_id(id)
     if tekma is None:
         return bottle.template("meni_tekme", prikazi="ni_id", iskani_id=id)
@@ -191,8 +191,8 @@ def tekma_datum():
                 return bottle.redirect(f"/tekma/id/{rezultat[0][0]}")
             else:
                 tekme = []
-                for row in rezultat:
-                    podrobnosti = najdi_tekmo_po_id(row[0])
+                for vrstica in rezultat:
+                    podrobnosti = najdi_tekmo_po_id(vrstica[0])
                     if podrobnosti:
                         tekme.append(podrobnosti)
                 return bottle.template("meni_tekme", prikazi="datum", tekme=tekme, datum=datum)
@@ -217,11 +217,11 @@ def najdi_tekme_po_obdobju(zacetek, konec):
     '''Vrne vse tekme znotraj danega obdobja.'''
     poizvedba = "SELECT id, goli_a, goli_b, datum FROM tekma WHERE datum BETWEEN ? AND ?"
     rezultat = conn.execute(poizvedba, (zacetek, konec)).fetchall()
-    return [{"id": row[0], "goli_a": row[1], "goli_b": row[2], "datum": row[3]} for row in rezultat]  # tudi če je prazno
+    return [{"id": vrstica[0], "goli_a": vrstica[1], "goli_b": vrstica[2], "datum": vrstica[3]} for vrstica in rezultat]  # tudi če je prazno
 
 @bottle.route('/tekma/obdobje/<zacetek>/<konec>')
 def tekma_po_obdobju(zacetek, konec):
-    '''Vrne tekme, ki so bile odigrane v izbranem obdobju.'''
+    '''Vrne tekme, ki so bile odigrane v izbranem obdobju.''' # kadar želimo preko URL-ja prikazati tekme med dvema datumoma
     tekme = najdi_tekme_po_obdobju(zacetek, konec)
     sezone_obj = Sezona.vse_sezone()
     sezone = {id: {"zacetek": sez.zacetek, "konec": sez.konec} for id, sez in sezone_obj.items()}
