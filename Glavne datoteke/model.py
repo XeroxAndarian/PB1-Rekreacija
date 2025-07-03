@@ -15,7 +15,7 @@ def start():
 
 PRVIC = start()
 def prevedi_None(vrednost):
-    '''Funkcija sprejme vrensot in, če je None, vrne 0.'''
+    '''Funkcija sprejme vrednost. Če je None, vrne 0.'''
     if vrednost == None:
         return 0
     else:
@@ -848,7 +848,7 @@ def nov_SR(datum, zbirka_SR):
     return zbirka_SR
 
 def SR(datum):
-    '''Izračuna SR igralca z ID-jem igralec_id na datum datum. Za tekme proti koncu sezone lahko traja nekaj dalj časa.'''
+    '''Izračuna SR igralca z ID-jem igralec_id na datum datum. Za tekme proti koncu sezone lahko traja malo več časa.'''
     if datum in zbirka_zbirk_SR:
         return zbirka_zbirk_SR[datum]
     
