@@ -946,7 +946,7 @@ class Lestvica:
 
     @staticmethod
     def prevajalnik(kategorija):
-        '''Metoda prejme kateogirjo in ji priredi ime, ki se ujema v SQL-ju.'''
+        '''Metoda prejme kategorijo in ji priredi ime, ki se ujema v SQL-ju.'''
         if kategorija == "Goli":
             return "goli"
         if kategorija == "Asistence":
