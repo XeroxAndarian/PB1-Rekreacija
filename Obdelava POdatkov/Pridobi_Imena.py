@@ -12,7 +12,7 @@ cur = conn.cursor()
 with open(json_file_path, 'r', encoding="utf-8") as j:
     dict = json.loads(j.read())
 
-# Za vsak slučaj najprej pobrišemo tabeli igralkec in vzdevek, če slučajno obstajata
+# Za vsak slučaj najprej pobrišemo tabeli igralec in vzdevek, če slučajno obstajata
 pobrisi_tabelo = 'DROP TABLE IF EXISTS igralec'
 cur.execute(pobrisi_tabelo)
 pobrisi_tabelo = 'DROP TABLE IF EXISTS vzdevek'

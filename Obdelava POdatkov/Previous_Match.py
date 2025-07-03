@@ -85,8 +85,8 @@ def previous_match_stats():
     last = file.read()
     Last = last.split("\n")
     match_type = Last[0].split(",")[0]
-    
     last_date = Last[1].split(",")[0]
+    
     if match_type == "Match":
         team = 0
         team_score = 0

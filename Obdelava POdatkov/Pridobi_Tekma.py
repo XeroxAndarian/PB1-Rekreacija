@@ -157,8 +157,8 @@ def pretvori(file):
         goli_skupaj_b = 0
 
         for stat in ekipa_a:
-            goli_skupaj_a += stat[2]
-            goli_skupaj_b += stat[4]
+            goli_skupaj_a += stat[2] # število golov a
+            goli_skupaj_b += stat[4] # število avtogolov b
 
         for stat in ekipa_b:
             goli_skupaj_b += stat[2]
