@@ -365,7 +365,7 @@ def prikazi_splosno_lestvico(kategorija):
     '''Vrne splošno lestvico za izbrano kategorijo.'''
     zacetek = PRVIC
     konec = DANES
-    stevilo = 0
+    stevilo = 0 # prikaže lestvico za vse igralce
 
     if kategorija == "Prisotnost":
         lestvica = Lestvica.pridobi_lestvico_prisotnost(konec, stevilo, zacetek)
