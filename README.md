@@ -12,4 +12,4 @@ Podatki bodo razdeljeni v pet (5) tabel:
 5. Tabela **Vzdevek** bo vsebovala vzdevke igralcev. Atributi bodo *id*, *igralec_id* in *vzdevek*. En igralec ima lahko več vzdevkov.
 
 
-![image](https://github.com/user-attachments/assets/d6c4addf-0f63-4d3d-85fa-cbcb5b30d510)
+![image](https://github.com/XeroxAndarian/PB1-Rekreacija/blob/main/ER%20diagram.png)
